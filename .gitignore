@@ -1,0 +1,8 @@
+# Editors
+.idea
+
+# Builds
+cmake-build-debug
+
+# Data
+data
