@@ -2,25 +2,25 @@
 // Created by Dáša Pawlasová on 12.10.2021.
 //
 
-#include <vector>
 #include <iomanip>
+#include <iostream>
+#include <vector>
 
 #ifndef FEEDFORWARDNEURALNET_MATRIX_H
 #define FEEDFORWARDNEURALNET_MATRIX_H
-#define ELEMENT_TYPE double
-#define MATRIX_INITIAL 0
-#define DECIMAL_PLACES_IN_PRINT 2
-
-using namespace std;
 
 /**
  * Class representing a matrix
  */
+template<typename ELEMENT_TYPE>
 class Matrix {
-private:
-    vector <vector<ELEMENT_TYPE>> matrix;
-    int rows;
-    int cols;
+    std::vector <std::vector<ELEMENT_TYPE>> matrix;
+    int numRows;
+    int numCols;
+
+    static const int DECIMAL_PLACES_IN_PRINT = 2;
+    static const int MATRIX_INITIAL = 0;
+
 public:
 
     /**
@@ -28,18 +28,26 @@ public:
      * @param rows - amount of rows in the matrix
      * @param cols - amount of columns in the matrix
      */
-    Matrix(int rows, int cols);
+    Matrix(int rows, int cols):
+        numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, MATRIX_INITIAL)) {}
 
     /**
      * Prints matrix to standard output
      */
-    void PrintMatrix();
+    void printMatrix() {
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                std::cout << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << matrix[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
 
     /**
      * Get vectors of the matrix
      * @return Vectors of the matrix
      */
-    vector <vector<ELEMENT_TYPE>> GetMatrix(){
+    auto &getMatrix() {
         return matrix;
     }
 
@@ -47,16 +55,16 @@ public:
      * Gets amount of rows in matrix.
      * @return amount of rows
      */
-    int GetRows(){
-        return rows;
+    int getNumRows() {
+        return numRows;
     }
 
     /**
      * Gets amount of columns in matrix.
      * @return amount of columns
      */
-    int GetCols(){
-        return cols;
+    int getNumCols() {
+        return numCols;
     }
 };
 
