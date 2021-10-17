@@ -10,4 +10,4 @@ set(CMAKE_CXX_FLAGS "-Wall -Werror -pthread")
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-add_executable(FeedForwardNeuralNet src/main.cpp src/activation_functions/sigmoid.cpp src/activation_functions/sigmoid.h src/csv/csv_reader.cpp src/csv/csv_reader.h src/data_structures/matrix.cpp src/data_structures/matrix.h)
+add_executable(FeedForwardNeuralNet src/main.cpp src/activation_functions/sigmoid.cpp src/activation_functions/sigmoid.h src/csv/csv_reader.cpp src/csv/csv_reader.h src/data_structures/matrix.cpp src/data_structures/matrix.h src/csv/csv_writer.h)
