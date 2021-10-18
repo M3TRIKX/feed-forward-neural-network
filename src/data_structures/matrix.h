@@ -69,7 +69,12 @@ public:
         return numCols;
     }
 
-    auto operator+ (Matrix<ELEMENT_TYPE> & second){
+    /**
+     * Addition of matrices
+     * @param second - matrix to add
+     * @return result matrix
+     */
+    auto operator+ (Matrix<ELEMENT_TYPE> &second){
         if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
             throw MatrixSizeException();
         }
@@ -82,7 +87,11 @@ public:
         return result;
     }
 
-    void operator += (Matrix<ELEMENT_TYPE> other){
+    /**
+     * Addition of matrix to original matrix
+     * @param other - matrix to add
+     */
+    void operator += (Matrix<ELEMENT_TYPE> &other){
         if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
             throw MatrixSizeException();
         }
@@ -93,7 +102,12 @@ public:
         }
     }
 
-    auto operator- (Matrix<ELEMENT_TYPE> & second){
+    /**
+     * Subtraction of matrices
+     * @param second - matrix to subtract
+     * @return result matrix
+     */
+    auto operator- (Matrix<ELEMENT_TYPE> &second){
         if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
             throw MatrixSizeException();
         }
@@ -106,7 +120,11 @@ public:
         return result;
     }
 
-    void operator -= (Matrix<ELEMENT_TYPE> other){
+    /**
+     * Subtraction of matrix to original matrix
+     * @param other - matrix to subtract
+     */
+    void operator -= (Matrix<ELEMENT_TYPE> &other){
         if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
             throw MatrixSizeException();
         }
@@ -117,7 +135,12 @@ public:
         }
     }
 
-    auto operator* (Matrix<ELEMENT_TYPE> & second){
+    /**
+     * Multiplication of matrices
+     * @param second - matrix to multiply by
+     * @return result matrix
+     */
+    auto operator* (Matrix<ELEMENT_TYPE> &second){
         if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
             throw MatrixSizeException();
         }
@@ -130,7 +153,11 @@ public:
         return result;
     }
 
-    void operator *= (Matrix<ELEMENT_TYPE> other){
+    /**
+     * Multiplication of matrix
+     * @param other - matrix to multiply by
+     */
+    void operator *= (Matrix<ELEMENT_TYPE> &other){
         if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
             throw MatrixSizeException();
         }
