@@ -60,6 +60,6 @@ namespace {
         Matrix<float> mat2(std::move(m2));
         Matrix<float> matRes(std::move(mres));
 
-        EXPECT_EQ(mat1.slowMatmul(mat2).getMatrix(), matRes.getMatrix());
+        EXPECT_EQ(mat1.matmul(mat2).getMatrix(), matRes.getMatrix());
     }
 }
