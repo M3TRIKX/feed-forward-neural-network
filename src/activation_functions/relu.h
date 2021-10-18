@@ -2,16 +2,16 @@
 // Created by Dominik Klement on 17/10/2021.
 //
 
-#ifndef FEEDFORWARDNEURALNET_FAST_SIGMOID_H
-#define FEEDFORWARDNEURALNET_FAST_SIGMOID_H
-
+#ifndef FEEDFORWARDNEURALNET_RELU_H
+#define FEEDFORWARDNEURALNET_RELU_H
 #include "template.h"
 #include <math.h>
+#include <algorithm>
 
 class ReLU: public ActivationFunction {
 public:
     static type normal(type x) {
-        return max(0, x);
+        return std::max(0.f, x);
     }
 
     static type derivative(type x) {
@@ -21,4 +21,4 @@ public:
     }
 };
 
-#endif //FEEDFORWARDNEURALNET_FAST_SIGMOID_H
+#endif //FEEDFORWARDNEURALNET_RELU_H

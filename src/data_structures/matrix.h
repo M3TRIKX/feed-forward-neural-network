@@ -167,6 +167,23 @@ public:
             }
         }
     }
+
+    /**
+     * Applies given function to matrix and returns a result matrix
+     * @tparam F - Function type
+     * @param f - function to apply
+     * @return resulting matrix
+     */
+    template<typename F>
+    auto applyFunction(F f) {
+        auto result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = f(matrix[i][j]);
+            }
+        }
+        return result;
+    }
 };
 
 #endif //FEEDFORWARDNEURALNET_MATRIX_H
