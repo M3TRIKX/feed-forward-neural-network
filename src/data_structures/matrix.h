@@ -17,20 +17,22 @@ class MatrixSizeException: std::exception {};
  */
 template<typename ELEMENT_TYPE>
 class Matrix {
-    int numRows;
-    int numCols;
+    unsigned int numRows;
+    unsigned int numCols;
     std::vector<std::vector<ELEMENT_TYPE>> matrix;
 
     static const int DECIMAL_PLACES_IN_PRINT = 2;
 
 public:
 
+    Matrix() = default;
+
     /**
      * Matrix class constructor, initiates the matrix with zeros
      * @param rows - amount of rows in the matrix
      * @param cols - amount of columns in the matrix
      */
-    Matrix(int rows, int cols) :
+    Matrix(unsigned int rows, unsigned int cols) :
             numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, 0)) {}
 
     /**
@@ -39,7 +41,7 @@ public:
      * @param cols - amount of columns in the matrix
      * @pram defaultValue - a value the matrix will be initialized with
      */
-    Matrix(int rows, int cols, ELEMENT_TYPE defaultValue) :
+    Matrix(unsigned int rows, unsigned int cols, ELEMENT_TYPE defaultValue) :
             numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, defaultValue)) {}
 
     /**
@@ -71,7 +73,7 @@ public:
      * @param max - random max bound
      * @return randomly initialized matrix
      */
-    static Matrix<ELEMENT_TYPE> generateRandomMatrix(int rows, int cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
+    static Matrix<ELEMENT_TYPE> generateRandomMatrix(unsigned int rows, unsigned int cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
         Matrix res(cols, rows);
 
         for (unsigned i = 0; i < rows; ++i) {
@@ -96,19 +98,23 @@ public:
         }
     }
 
-    /**
-     * Get vectors of the matrix
-     * @return Vectors of the matrix
-     */
-    auto &getMatrix() {
+    const auto &getMatrix() const {
         return matrix;
+    }
+
+    auto getItem(int row, int col) const {
+        return matrix[row][col];
+    }
+
+    void setItem(int row, int col) {
+        return matrix[row][col];
     }
 
     /**
      * Gets amount of rows in matrix.
      * @return amount of rows
      */
-    int getNumRows() {
+    unsigned int getNumRows() const {
         return numRows;
     }
 
@@ -116,7 +122,7 @@ public:
      * Gets amount of columns in matrix.
      * @return amount of columns
      */
-    int getNumCols() {
+    unsigned int getNumCols() const {
         return numCols;
     }
 
