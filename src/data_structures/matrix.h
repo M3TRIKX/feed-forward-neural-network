@@ -9,6 +9,8 @@
 #ifndef FEEDFORWARDNEURALNET_MATRIX_H
 #define FEEDFORWARDNEURALNET_MATRIX_H
 
+class MatrixSizeException: std::exception {};
+
 /**
  * Class representing a matrix
  */
@@ -19,7 +21,7 @@ class Matrix {
     int numCols;
 
     static const int DECIMAL_PLACES_IN_PRINT = 2;
-    static const int MATRIX_INITIAL = 0;
+    static const int MATRIX_INITIAL = 1;
 
 public:
 
@@ -29,7 +31,7 @@ public:
      * @param cols - amount of columns in the matrix
      */
     Matrix(int rows, int cols):
-        numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, MATRIX_INITIAL)) {}
+        numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, 1)) {}
 
     /**
      * Prints matrix to standard output
@@ -65,6 +67,122 @@ public:
      */
     int getNumCols() {
         return numCols;
+    }
+
+    /**
+     * Addition of matrices
+     * @param second - matrix to add
+     * @return result matrix
+     */
+    auto operator+ (Matrix<ELEMENT_TYPE> &second){
+        if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
+            throw MatrixSizeException();
+        }
+        Matrix result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = matrix[i][j] + second.matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Addition of matrix to original matrix
+     * @param other - matrix to add
+     */
+    void operator += (Matrix<ELEMENT_TYPE> &other){
+        if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
+            throw MatrixSizeException();
+        }
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                matrix[i][j] += other.matrix[i][j];
+            }
+        }
+    }
+
+    /**
+     * Subtraction of matrices
+     * @param second - matrix to subtract
+     * @return result matrix
+     */
+    auto operator- (Matrix<ELEMENT_TYPE> &second){
+        if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
+            throw MatrixSizeException();
+        }
+        Matrix result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = matrix[i][j] - second.matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Subtraction of matrix to original matrix
+     * @param other - matrix to subtract
+     */
+    void operator -= (Matrix<ELEMENT_TYPE> &other){
+        if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
+            throw MatrixSizeException();
+        }
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                matrix[i][j] -= other.matrix[i][j];
+            }
+        }
+    }
+
+    /**
+     * Multiplication of matrices
+     * @param second - matrix to multiply by
+     * @return result matrix
+     */
+    auto operator* (Matrix<ELEMENT_TYPE> &second){
+        if (getNumRows() != second.getNumRows() || getNumCols() != second.getNumCols()){
+            throw MatrixSizeException();
+        }
+        Matrix result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = matrix[i][j] * second.matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Multiplication of matrix
+     * @param other - matrix to multiply by
+     */
+    void operator *= (Matrix<ELEMENT_TYPE> &other){
+        if (getNumRows() != other.getNumRows() || getNumCols() != other.getNumCols()){
+            throw MatrixSizeException();
+        }
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                matrix[i][j] *= other.matrix[i][j];
+            }
+        }
+    }
+
+    /**
+     * Applies given function to matrix and returns a result matrix
+     * @tparam F - Function type
+     * @param f - function to apply
+     * @return resulting matrix
+     */
+    template<typename F>
+    auto applyFunction(F f) {
+        auto result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
+        for (int i = 0; i < getNumRows(); i++){
+            for (int j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = f(matrix[i][j]);
+            }
+        }
+        return result;
     }
 };
 
