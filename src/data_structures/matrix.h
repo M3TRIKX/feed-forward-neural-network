@@ -17,9 +17,9 @@ class MatrixSizeException: std::exception {};
  */
 template<typename ELEMENT_TYPE>
 class Matrix {
-    std::vector<std::vector<ELEMENT_TYPE>> matrix;
     int numRows;
     int numCols;
+    std::vector<std::vector<ELEMENT_TYPE>> matrix;
 
     static const int DECIMAL_PLACES_IN_PRINT = 2;
 
@@ -46,19 +46,19 @@ public:
      * Matrix class constructor, initiates the matrix from a vector
      * @param matrix - 2D array we want to create the matrix from
      */
-    Matrix(std::vector<std::vector<ELEMENT_TYPE>> &&matrix) {
-        if (matrix.size() == 0) {
+    Matrix(std::vector<std::vector<ELEMENT_TYPE>> &&vecMatrix) {
+        if (vecMatrix.size() == 0) {
             throw std::exception();
         }
 
-        size_t rowSize = matrix[0].size();
-        for (auto const &row : matrix) {
+        size_t rowSize = vecMatrix[0].size();
+        for (auto const &row : vecMatrix) {
             if (row.size() != rowSize) {
                 throw std::exception();
             }
         }
 
-        matrix = std::move(matrix);
+        matrix = std::move(vecMatrix);
         numRows = matrix.size();
         numCols = static_cast<int>(rowSize);
     }

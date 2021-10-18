@@ -2,37 +2,7 @@
 #include "../src/data_structures/matrix.h"
 
 namespace {
-    class MatrixTests : public ::testing::Test {
-    protected:
-        Matrix<double> m1;
-
-        MatrixTests(): m1(6, 5) {
-            // Constructor
-        }
-
-        ~MatrixTests() override {
-            // Destructor
-        }
-
-        void SetUp() override {
-            // Code here will be called immediately after the constructor (right
-            // before each test).
-        }
-
-        void TearDown() override {
-            // Code here will be called immediately after each test (right
-            // before the destructor).
-        }
-    };
-
-    // Using Matrix instance defined inside the MatrixTests class.
-    TEST_F(MatrixTests, Properties) {
-        EXPECT_EQ(m1.getNumRows(), 6);
-        EXPECT_EQ(m1.getNumCols(), 5);
-    }
-
-    // Another approach is to instantiate Matrix inside the test.
-    TEST(MatrixTests2, Properties) {
+    TEST(MatrixTests, Properties2) {
         const int numRows = 24;
         const int numCols = 42;
         Matrix<int> m(numRows, numCols);
@@ -41,7 +11,7 @@ namespace {
         EXPECT_EQ(m.getNumCols(), numCols);
     }
 
-    TEST(MatrixMul, Basic) {
+    TEST(MatrixTests, BasicMatmul) {
         std::vector<std::vector<float>> m1 = {
                 {1, 2, 3},
                 {4, 5, 6},

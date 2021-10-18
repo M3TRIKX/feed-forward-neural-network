@@ -4,7 +4,7 @@
 #include "../src/csv/csv_reader.h"
 
 namespace {
-    TEST(CSVReadWrite, TrainVectors) {
+    TEST(CSV, TrainVectorsRW) {
         CsvReader<784> reader("./data/fashion_mnist_train_vectors.csv");
         CsvWriter<784>::writeCsv("out.csv", reader.getDataVector());
         CsvReader<784> reader2("out.csv");
@@ -14,7 +14,7 @@ namespace {
         EXPECT_EQ(reader.getDataVector(), reader2.getDataVector());
     }
 
-    TEST(CSVReadWrite, TrainLabels) {
+    TEST(CSV, TrainLabelsRW) {
         CsvReader<1> reader("./data/fashion_mnist_train_labels.csv");
         CsvWriter<1>::writeCsv("out.csv", reader.getDataVector());
         CsvReader<1> reader2("out.csv");
