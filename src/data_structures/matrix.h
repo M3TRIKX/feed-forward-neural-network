@@ -170,8 +170,28 @@ public:
     }
 
     /**
+     * Addition of vector to each row in the matrix
+     * @param rhs - vector to add to each row in the matrix
+     * @return this
+     */
+    auto &operator+=(const std::vector<ELEMENT_TYPE> &rhs) {
+        if (getNumCols() != rhs.size()) {
+            throw MatrixSizeException();
+        }
+
+        for (int i = 0; i < getNumRows(); ++i) {
+            for (int j = 0; j < getNumCols(); ++j) {
+                matrix[i][j] = rhs[j];
+            }
+        }
+
+        return *this;
+    }
+
+    /**
      * Subtraction of matrix to original matrix
      * @param rhs - matrix to subtract
+     * @return this
      */
     auto &operator-=(const Matrix<ELEMENT_TYPE> &rhs) {
         if (getNumRows() != rhs.getNumRows() || getNumCols() != rhs.getNumCols()) {
@@ -190,6 +210,7 @@ public:
     /**
      * Multiplication of matrix
      * @param rhs - matrix to multiply by
+     * @return this
      */
     auto &operator*=(const Matrix<ELEMENT_TYPE> &rhs) {
         if (getNumRows() != rhs.getNumRows() || getNumCols() != rhs.getNumCols()) {
@@ -212,6 +233,17 @@ public:
      * @return result matrix
      */
     friend auto operator+(Matrix<ELEMENT_TYPE> lhs, const Matrix<ELEMENT_TYPE> &rhs) {
+        lhs += rhs;
+        return lhs;
+    }
+
+    /**
+     * Adds rhs vector to each row in the matrix lhs
+     * @param lhs - matrix which is copied and returned
+     * @param rhs - vector we want to add to each row
+     * @return result matrix
+     */
+    friend auto operator+(Matrix<ELEMENT_TYPE> lhs, const std::vector<ELEMENT_TYPE> &rhs) {
         lhs += rhs;
         return lhs;
     }
