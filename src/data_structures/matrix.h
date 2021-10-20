@@ -17,8 +17,8 @@ class MatrixSizeException: std::exception {};
  */
 template<typename ELEMENT_TYPE>
 class Matrix {
-    unsigned int numRows;
-    unsigned int numCols;
+    size_t numRows;
+    size_t numCols;
     std::vector<std::vector<ELEMENT_TYPE>> matrix;
 
     static const int DECIMAL_PLACES_IN_PRINT = 2;
@@ -32,7 +32,7 @@ public:
      * @param rows - amount of rows in the matrix
      * @param cols - amount of columns in the matrix
      */
-    Matrix(unsigned int rows, unsigned int cols) :
+    Matrix(size_t rows, size_t cols) :
             numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, 0)) {}
 
     /**
@@ -41,7 +41,7 @@ public:
      * @param cols - amount of columns in the matrix
      * @pram defaultValue - a value the matrix will be initialized with
      */
-    Matrix(unsigned int rows, unsigned int cols, ELEMENT_TYPE defaultValue) :
+    Matrix(size_t rows, size_t cols, ELEMENT_TYPE defaultValue) :
             numRows(rows), numCols(cols), matrix(rows, std::vector<ELEMENT_TYPE>(cols, defaultValue)) {}
 
     /**
@@ -73,11 +73,11 @@ public:
      * @param max - random max bound
      * @return randomly initialized matrix
      */
-    static Matrix<ELEMENT_TYPE> generateRandomMatrix(unsigned int rows, unsigned int cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
+    static Matrix<ELEMENT_TYPE> generateRandomMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
         Matrix res(cols, rows);
 
-        for (unsigned i = 0; i < rows; ++i) {
-            for (unsigned j = 0; j < cols; ++j) {
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
                 res.matrix[i][j] = generateRandomDecimal(min, max);
             }
         }
@@ -89,9 +89,9 @@ public:
      * Prints matrix to standard output
      */
     void printMatrix() {
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numCols; j++) {
-                std::cout << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << matrix[i][j] << " ";
+        for (size_t i = 0; i < numRows; i++) {
+            for (size_t j = 0; j < numCols; j++) {
+                std::cout << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << getItem(i,j) << " ";
             }
 
             std::cout << std::endl;
@@ -114,7 +114,7 @@ public:
      * Gets amount of rows in matrix.
      * @return amount of rows
      */
-    unsigned int getNumRows() const {
+    size_t getNumRows() const {
         return numRows;
     }
 
@@ -122,7 +122,7 @@ public:
      * Gets amount of columns in matrix.
      * @return amount of columns
      */
-    unsigned int getNumCols() const {
+    size_t getNumCols() const {
         return numCols;
     }
 
@@ -140,9 +140,9 @@ public:
     auto applyFunction(F f) {
         auto result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
 
-        for (int i = 0; i < getNumRows(); i++) {
-            for (int j = 0; j < getNumCols(); j++) {
-                result.matrix[i][j] = f(matrix[i][j]);
+        for (size_t i = 0; i < getNumRows(); i++) {
+            for (size_t j = 0; j < getNumCols(); j++) {
+                result.matrix[i][j] = f(getItem(i,j));
             }
         }
 
@@ -160,9 +160,9 @@ public:
             throw MatrixSizeException();
         }
 
-        for (int i = 0; i < getNumRows(); i++) {
-            for (int j = 0; j < getNumCols(); j++) {
-                matrix[i][j] += rhs.matrix[i][j];
+        for (size_t i = 0; i < getNumRows(); i++) {
+            for (size_t j = 0; j < getNumCols(); j++) {
+                matrix[i][j] += rhs.getItem(i,j);
             }
         }
 
@@ -179,8 +179,8 @@ public:
             throw MatrixSizeException();
         }
 
-        for (int i = 0; i < getNumRows(); ++i) {
-            for (int j = 0; j < getNumCols(); ++j) {
+        for (size_t i = 0; i < getNumRows(); ++i) {
+            for (size_t j = 0; j < getNumCols(); ++j) {
                 matrix[i][j] = rhs[j];
             }
         }
@@ -198,9 +198,9 @@ public:
             throw MatrixSizeException();
         }
 
-        for (int i = 0; i < getNumRows(); i++) {
-            for (int j = 0; j < getNumCols(); j++) {
-                matrix[i][j] -= rhs.matrix[i][j];
+        for (size_t i = 0; i < getNumRows(); i++) {
+            for (size_t j = 0; j < getNumCols(); j++) {
+                matrix[i][j] -= rhs.getItem(i,j);
             }
         }
 
@@ -217,9 +217,9 @@ public:
             throw MatrixSizeException();
         }
 
-        for (int i = 0; i < getNumRows(); i++) {
-            for (int j = 0; j < getNumCols(); j++) {
-                matrix[i][j] *= rhs.matrix[i][j];
+        for (size_t i = 0; i < getNumRows(); i++) {
+            for (size_t j = 0; j < getNumCols(); j++) {
+                matrix[i][j] *= rhs.getItem(i,j);
             }
         }
 
@@ -296,10 +296,10 @@ private:
 
         Matrix res(numRows, rhs.numCols, 0);
 
-        for (int i = 0; i < numRows; ++i) {
-            for (int j = 0; j < rhs.numCols; ++j) {
-                for (int k = 0; k < numCols; ++k) {
-                    res.matrix[i][j] += matrix[i][k] * rhs.matrix[k][j];
+        for (size_t i = 0; i < numRows; ++i) {
+            for (size_t j = 0; j < rhs.numCols; ++j) {
+                for (size_t k = 0; k < numCols; ++k) {
+                    res.matrix[i][j] += getItem(i,k) * rhs.getItem(k,j);
                 }
             }
         }
