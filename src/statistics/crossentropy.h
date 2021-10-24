@@ -13,7 +13,7 @@
  */
 class CrossentropyFunction {
 public:
-    auto static crossentropy(Matrix<float> &predicted, std::vector<int> expected){
+    auto static crossentropy(const Matrix<float> &predicted, const std::vector<int> &expected){
         float crossentropy = 0;
         for (int i = 0; i < (int) predicted.getNumRows(); i++){
             for (int j = 0; j < (int) predicted.getNumCols(); j++){
@@ -25,7 +25,7 @@ public:
         return crossentropy;
     }
 
-    auto static crossentropyDerivative(Matrix<float> &predicted, std::vector<int> expected){
+    auto static crossentropyDerivative(Matrix<float> &predicted, const std::vector<int> &expected){
         float crossentropy = 0;
         for (int i = 0; i < (int) predicted.getNumRows(); i++){
             for (int j = 0; j < (int) predicted.getNumCols(); j++){

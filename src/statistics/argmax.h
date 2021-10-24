@@ -17,8 +17,8 @@ public:
      * @param matrix - matrix to compute argmax on
      * @return - vector of classes
      */
-    auto static argmax(Matrix<float> matrix){
-        auto classes = std::vector<int>(matrix.getNumRows());
+    auto static argmax(const Matrix<float> &matrix){
+        auto classes = std::vector<size_t>(matrix.getNumRows());
         for (size_t i = 0; i < matrix.getNumRows(); i++){
             float currentMax = 0;
             for (size_t j = 0; j < matrix.getNumCols(); j++){

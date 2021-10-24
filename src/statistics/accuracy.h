@@ -18,15 +18,14 @@ public:
      * @param expected - expected labels
      * @return accuracy of NN predictions
      */
-    auto static accuracy(std::vector<int> predicted, std::vector<int> expected){
-        int totalSamples = predicted.size();
+    auto static accuracy(const std::vector<int> &predicted, const std::vector<int> &expected){
         float correctPredictions = 0;
-        for (int i = 0; i < totalSamples; i++){
+        for (size_t i = 0; i < predicted.size(); i++){
             if (predicted[i] == expected[i]){
                 correctPredictions++;
             }
         }
-        return correctPredictions / totalSamples * 100;
+        return correctPredictions / static_cast<float>(totalSamples) * 100;
     }
 };
 #endif //FEEDFORWARDNEURALNET_ACCURACY_H
