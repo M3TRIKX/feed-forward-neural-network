@@ -5,10 +5,12 @@
 #ifndef FEEDFORWARDNEURALNET_TEMPLATE_H
 #define FEEDFORWARDNEURALNET_TEMPLATE_H
 
+#include "../data_structures/matrix.h"
+
 /**
  * This class is a template for activation function
  */
-class ActivationFunction {
+class ActivationFunctionTemplate {
 public:
     using type = float;
 
@@ -17,7 +19,7 @@ public:
      * @param x - point at which we want to compute the function.
      * @return computed value
      */
-    static type normal(type x);
+    static void normal(Matrix<type> &matrix);
 
     /**
      * Computes function derivative at the point x.

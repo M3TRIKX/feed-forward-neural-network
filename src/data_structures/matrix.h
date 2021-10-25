@@ -21,7 +21,7 @@ class Matrix {
     size_t numCols;
     std::vector<std::vector<ELEMENT_TYPE>> matrix;
 
-    static const int DECIMAL_PLACES_IN_PRINT = 2;
+    static const int DECIMAL_PLACES_IN_PRINT = 4;
 
 public:
 
@@ -74,7 +74,7 @@ public:
      * @return randomly initialized matrix
      */
     static Matrix<ELEMENT_TYPE> generateRandomMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
-        Matrix res(cols, rows);
+        Matrix res(rows, cols);
 
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
@@ -102,12 +102,12 @@ public:
         return matrix;
     }
 
-    auto getItem(int row, int col) const {
+    auto getItem(size_t row, size_t col) const {
         return matrix[row][col];
     }
 
-    void setItem(int row, int col) {
-        return matrix[row][col];
+    void setItem(size_t row, size_t col, ELEMENT_TYPE val) {
+        matrix[row][col] = val;
     }
 
     /**
@@ -126,27 +126,32 @@ public:
         return numCols;
     }
 
-    Matrix matmul(const Matrix &m2) {
-        return slowMatmul(m2);
+    /**
+     * Matrix multiplication with additional feature of multiplying a part of the first matrix
+     * with the whole second matrix m2.
+     * @param m2 Matrix we are multiplying *this with
+     * @param numRows Number of rows from *this matrix we want to use for multiplication
+     * @return multiplied matrices
+     */
+    Matrix matmul(const Matrix &m2, int numRowsToMultiply = -1) const {
+        if (numRowsToMultiply == -1) {
+            return slowMatmul(m2, getNumRows());
+        }
+        return slowMatmul(m2, numRowsToMultiply);
     }
 
     /**
      * Applies given function to matrix and returns a result matrix.
      * @tparam F - Function type
      * @param f - unary function to apply
-     * @return resulting matrix
      */
     template<typename F>
-    auto applyFunction(F f) {
-        auto result = Matrix<ELEMENT_TYPE>(getNumRows(), getNumCols());
-
+    void applyFunction(F f) {
         for (size_t i = 0; i < getNumRows(); i++) {
             for (size_t j = 0; j < getNumCols(); j++) {
-                result.matrix[i][j] = f(getItem(i,j));
+                matrix[i][j] = f(matrix[i][j]);
             }
         }
-
-        return result;
     }
 
     // Arithmetic operators
@@ -289,17 +294,17 @@ private:
      * @param rhs - a matrix we are multiplying with
      * @return *this "matmul" rhs
      */
-    Matrix slowMatmul(const Matrix &rhs) {
+    Matrix slowMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
         if (numCols != rhs.numRows) {
             throw MatrixSizeException();
         }
 
-        Matrix res(numRows, rhs.numCols, 0);
+        Matrix res(numRowsToMultiply, rhs.numCols, 0);
 
-        for (size_t i = 0; i < numRows; ++i) {
+        for (size_t i = 0; i < numRowsToMultiply; ++i) {
             for (size_t j = 0; j < rhs.numCols; ++j) {
                 for (size_t k = 0; k < numCols; ++k) {
-                    res.matrix[i][j] += getItem(i,k) * rhs.getItem(k,j);
+                    res.matrix[i][j] += getItem(i, k) * rhs.getItem(k, j);
                 }
             }
         }

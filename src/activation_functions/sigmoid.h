@@ -8,14 +8,18 @@
 #include "template.h"
 #include <math.h>
 
-class Sigmoid: public ActivationFunction {
+class Sigmoid: public ActivationFunctionTemplate {
 public:
-    static type normal(type x) {
-        return 1 / (1 + exp(-x));
+    static void normal(Matrix<type> &matrix) {
+        auto fn = [](type x) {
+            return 1 / (1 + exp(-x));
+        };
+        matrix.applyFunction(fn);
+//        return 1 / (1 + exp(-x));
     }
 
     static type derivative(type x) {
-        type n = normal(x);
+        type n = 1 / (1 + exp(-x));
         return n * (1 - n);
     }
 };

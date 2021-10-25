@@ -13,14 +13,18 @@
  * The reason for using the fast version over the normal one is the speed
  * of computation.
  */
-class FastSigmoid: public ActivationFunction {
+class FastSigmoid: public ActivationFunctionTemplate {
 public:
-    static type normal(type x) {
-        return x / (1 + abs(x));
+    static void normal(Matrix<type> &matrix) {
+        auto fn = [](type x) {
+            return x / (1 + abs(x));
+        };
+        matrix.applyFunction(fn);
+//        return x / (1 + abs(x));
     }
 
     static type derivative(type x) {
-        type n = normal(x);
+        type n = x / (1 + abs(x));
         return n * n;
     }
 };

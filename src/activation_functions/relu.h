@@ -8,10 +8,16 @@
 #include <math.h>
 #include <algorithm>
 
-class ReLU: public ActivationFunction {
+class ReLU: public ActivationFunctionTemplate {
 public:
-    static type normal(type x) {
-        return std::max(0.f, x);
+    static void normal(Matrix<type> &matrix) {
+        auto fn = [](type x) {
+            // ToDo: Change to float in the end.
+            return std::max(0.f, x);
+        };
+        matrix.applyFunction(fn);
+//        return std::max(0.f, x);
+
     }
 
     static type derivative(type x) {

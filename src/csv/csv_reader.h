@@ -18,10 +18,12 @@
 class CsvReadError: std::exception {};
 
 class CsvReader {
+    using ELEMENT_TYPE = float;
+
     int fd = 0;
     bool closed = false;
-    std::vector<std::vector<uint8_t>> data;
-    Matrix<uint8_t> dataMatrix;
+    std::vector<std::vector<ELEMENT_TYPE>> data;
+    Matrix<ELEMENT_TYPE> dataMatrix;
 
 public:
     /**
@@ -111,7 +113,7 @@ public:
 
         // Create matrix out of the data vectors.
         // The operation just moves vectors around and init properties based on the data dimensions.
-        dataMatrix = std::move(Matrix<uint8_t>(std::move(data)));
+        dataMatrix = Matrix<ELEMENT_TYPE>(std::move(data));
 
         close(fd);
         closed = true;
@@ -121,6 +123,16 @@ public:
         if (!closed) {
             close(fd);
             closed = true;
+        }
+    }
+
+    void normalize() {
+        for (size_t i = 0; i < dataMatrix.getNumRows(); ++i) {
+            ELEMENT_TYPE maxRowVal = *(std::max_element(dataMatrix.getMatrix()[i].cbegin(),
+                                                        dataMatrix.getMatrix()[i].cend()));
+            for (size_t j = 0; j < dataMatrix.getNumCols(); ++j) {
+                dataMatrix.setItem(i, j, dataMatrix.getItem(i, j) / maxRowVal);
+            }
         }
     }
 
@@ -148,7 +160,7 @@ private:
      * @param currentArrPos - current array position (single row)
      * @param arr           - array representing current line
      */
-    void addNumToArray (char num[4], int currentNumPos, int currentArrPos, std::vector<uint8_t> &arr) {
+    void addNumToArray (char num[4], int currentNumPos, int currentArrPos, std::vector<ELEMENT_TYPE> &arr) {
         for (int j = 3; j >= currentNumPos; --j) num[j] = '\0';
         arr[currentArrPos] = atoi(num);
         memset(num, 0, 4);
