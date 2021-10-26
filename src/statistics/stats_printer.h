@@ -28,7 +28,7 @@ public:
      * @param expected - expected labels
      * @return stats as a hashmap
      */
-    static Stats getStats(const Matrix<float> &predicted, const std::vector<int> &expected) {
+    static Stats getStats(const Matrix<float> &predicted, const std::vector<size_t> &expected) {
         float accuracy = AccuracyFunction::accuracy(ArgmaxFunction::argmax(predicted), expected);
         float crossentropy = CrossentropyFunction::crossentropy(predicted, expected);
         return { .accuracy=accuracy, .crossEntropy=crossentropy };
@@ -44,8 +44,8 @@ public:
      * @param epoch - current epoch
      * @param totalEpochs - total amount of epochs
      */
-    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<int> &trainExpectedLabels,
-                                  const Matrix<float> &valOutput, const std::vector<int> &valExpectedLabels, int epoch, int totalEpochs) {
+    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<size_t> &trainExpectedLabels,
+                                  const Matrix<float> &valOutput, const std::vector<size_t> &valExpectedLabels, int epoch, int totalEpochs) {
         auto trainStats = getStats(trainOutput, trainExpectedLabels);
         auto valStats = getStats(valOutput, valExpectedLabels);
         std::cout << "Epoch: " << epoch << "/" << totalEpochs;
