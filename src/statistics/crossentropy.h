@@ -13,10 +13,10 @@
  */
 class CrossentropyFunction {
 public:
-    auto static crossentropy(Matrix<float> &predicted, std::vector<int> expected){
+    auto static crossentropy(const Matrix<float> &predicted, const std::vector<size_t> &expected){
         float crossentropy = 0;
-        for (int i = 0; i < (int) predicted.getNumRows(); i++){
-            for (int j = 0; j < (int) predicted.getNumCols(); j++){
+        for (size_t i = 0; i < predicted.getNumRows(); i++){
+            for (size_t j = 0; j < predicted.getNumCols(); j++){
                 int expectedValue = expected[i] == j ? 1 : 0;
                 float calculatedValue = predicted.getItem(i, j);
                 crossentropy -= expectedValue * log(calculatedValue) + (1 - expectedValue) * log(1 - calculatedValue);
@@ -25,10 +25,10 @@ public:
         return crossentropy;
     }
 
-    auto static crossentropyDerivative(Matrix<float> &predicted, std::vector<int> expected){
+    auto static crossentropyDerivative(Matrix<float> &predicted, const std::vector<size_t> &expected){
         float crossentropy = 0;
-        for (int i = 0; i < (int) predicted.getNumRows(); i++){
-            for (int j = 0; j < (int) predicted.getNumCols(); j++){
+        for (size_t i = 0; i < predicted.getNumRows(); i++){
+            for (size_t j = 0; j < predicted.getNumCols(); j++){
                 int expectedValue = expected[i] == j ? 1 : 0;
                 float calculatedValue = predicted.getItem(i, j);
                 crossentropy -= expectedValue / calculatedValue + (1 - expectedValue) / (1 - calculatedValue);

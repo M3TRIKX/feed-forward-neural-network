@@ -8,7 +8,11 @@
 #include "./accuracy.h"
 #include "./crossentropy.h"
 #include "./argmax.h"
-#include <map>
+
+struct Stats {
+    float accuracy = 0;
+    float crossEntropy = 0;
+};
 
 /**
  * Class containing different ways of printing and retrieving stats
@@ -24,10 +28,11 @@ public:
      * @param expected - expected labels
      * @return stats as a hashmap
      */
-    static auto getStats(Matrix<float> &predicted, std::vector<int>expected){
+    static Stats getStats(const Matrix<float> &predicted, const std::vector<size_t> &expected) {
         float accuracy = AccuracyFunction::accuracy(ArgmaxFunction::argmax(predicted), expected);
         float crossentropy = CrossentropyFunction::crossentropy(predicted, expected);
-        return std::map<std::string, float> {{"accuracy", accuracy}, {"crossentropy", crossentropy}};
+        return { .accuracy=accuracy, .crossEntropy=crossentropy };
+//        return std::map<std::string, float> {{"accuracy", accuracy}, {"crossentropy", crossentropy}};
     }
 
     /**
@@ -39,15 +44,15 @@ public:
      * @param epoch - current epoch
      * @param totalEpochs - total amount of epochs
      */
-    static void printProgressLine(Matrix<float> &trainOutput, std::vector<int>trainExpectedLabels,
-            Matrix<float> &valOutput, std::vector<int>valExpectedLabels, int epoch, int totalEpochs){
+    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<size_t> &trainExpectedLabels,
+                                  const Matrix<float> &valOutput, const std::vector<size_t> &valExpectedLabels, int epoch, int totalEpochs) {
         auto trainStats = getStats(trainOutput, trainExpectedLabels);
         auto valStats = getStats(valOutput, valExpectedLabels);
         std::cout << "Epoch: " << epoch << "/" << totalEpochs;
-        std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats["accuracy"];
-        std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats["crossentropy"];
-        std::cout << "    ValAccuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats["accuracy"];
-        std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats["crossentropy"] << std::endl;
+        std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats.accuracy;
+        std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats.crossEntropy;
+        std::cout << "    ValAccuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats.accuracy;
+        std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats.crossEntropy << std::endl;
     }
 };
 #endif //FEEDFORWARDNEURALNET_STATS_PRINTER_H
