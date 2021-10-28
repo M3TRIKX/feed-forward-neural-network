@@ -12,6 +12,7 @@
  * Class containing cross-entropy function and its derivative
  */
 class CrossentropyFunction {
+    constexpr static float zeroCorrection = 1e-15;
 public:
     auto static crossentropy(const Matrix<float> &predicted, const std::vector<size_t> &expected){
         float crossentropy = 0;
@@ -19,7 +20,7 @@ public:
             for (size_t j = 0; j < predicted.getNumCols(); j++){
                 int expectedValue = expected[i] == j ? 1 : 0;
                 float calculatedValue = predicted.getItem(i, j);
-                crossentropy -= expectedValue * log(calculatedValue) + (1 - expectedValue) * log(1 - calculatedValue);
+                crossentropy -= expectedValue * log(calculatedValue + zeroCorrection) + (1 - expectedValue) * log(1 - calculatedValue + zeroCorrection);
             }
         }
         return crossentropy;
