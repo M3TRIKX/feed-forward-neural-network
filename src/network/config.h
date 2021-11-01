@@ -21,8 +21,14 @@ struct LayerConfig {
 
     size_t numNeurons = 1;
     ActivationFunction_t activationFunction;
-    LayerConfig(size_t numNeurons, ActivationFunction_t activationFunction = {}):
-        numNeurons(numNeurons), activationFunction(std::move(activationFunction)) {}
+    ActivationFunction_t activationDerivFunction;
+    ActivationFunction activationFunctionType;
+    LayerConfig(size_t numNeurons,
+                ActivationFunction fnType,
+                ActivationFunction_t fn = {},
+                ActivationFunction_t fnDeriv = {}):
+            numNeurons(numNeurons), activationFunction(std::move(fn)),
+            activationDerivFunction(fnDeriv), activationFunctionType(fnType) {}
 };
 
 class WrongActivationFunction : public std::exception {};
@@ -37,6 +43,7 @@ class Config {
 public:
     auto &addLayer(size_t numNeurons, ActivationFunction activationFunction = ActivationFunction::Identity) {
         ActivationFunction_t fn{};
+        ActivationFunction_t fnDeriv{};
 
         switch (activationFunction) {
             case Identity:
@@ -45,6 +52,7 @@ public:
 
             case ReLU:
                 fn = ReLU::normal;
+                fnDeriv = ReLU::derivative;
                 break;
 
             case Sigmoid:
@@ -63,7 +71,7 @@ public:
                 throw WrongActivationFunction();
         }
 
-        layersConfig.emplace_back(numNeurons, fn);
+        layersConfig.emplace_back(numNeurons, activationFunction, fn, fnDeriv);
         return *this;
     }
 

@@ -20,10 +20,11 @@ public:
 
     }
 
-    static type derivative(type x) {
-        if (x > 0)
-            return 1;
-        return 0;
+    static type derivative(Matrix<type> &matrix) {
+        auto fn = [](type x) {
+            return x > 0 ? 1 : 0;
+        };
+        matrix.applyFunction(fn);
     }
 };
 

@@ -102,6 +102,20 @@ public:
         return matrix;
     }
 
+    const auto &getMatrixRow(size_t row) const {
+        return matrix[row];
+    }
+
+    const auto getMatrixCol(size_t col) const {
+        std::vector<ELEMENT_TYPE> res(numRows, 0);
+
+        for (size_t i = 0; i < numRows; ++i) {
+            res[i] = matrix[i][col];
+        }
+
+        return res;
+    }
+
     auto getItem(size_t row, size_t col) const {
         return matrix[row][col];
     }
@@ -138,6 +152,18 @@ public:
             return slowMatmul(m2, getNumRows());
         }
         return slowMatmul(m2, numRowsToMultiply);
+    }
+
+    Matrix transpose() {
+        Matrix res(numCols, numRows);
+
+        for (size_t i = 0; i < numRows; ++i) {
+            for (size_t j = 0; j < numCols; ++j) {
+                res.matrix[j][i] = matrix[i][j];
+            }
+        }
+
+        return res;
     }
 
     /**
@@ -186,7 +212,7 @@ public:
 
         for (size_t i = 0; i < getNumRows(); ++i) {
             for (size_t j = 0; j < getNumCols(); ++j) {
-                matrix[i][j] = rhs[j];
+                matrix[i][j] += rhs[j];
             }
         }
 
@@ -272,6 +298,15 @@ public:
       */
     friend auto operator*(Matrix<ELEMENT_TYPE> lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         lhs *= rhs;
+        return lhs;
+    }
+
+    friend auto operator*(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
+        for (size_t i = 0; i < lhs.numRows; ++i) {
+            for (size_t j = 0; j < lhs.numCols; ++j) {
+                lhs.matrix[i][j] *= x;
+            }
+        }
         return lhs;
     }
 

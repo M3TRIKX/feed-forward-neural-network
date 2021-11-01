@@ -15,10 +15,11 @@ public:
     static void normal(Matrix<type> &matrix) {
         for (size_t i = 0; i < matrix.getNumRows(); ++i) {
             type rowSum = 0;
+            type rowMax = *(std::max_element(matrix.getMatrixRow(i).cbegin(), matrix.getMatrixRow(i).cend()));
 
             for (size_t j = 0; j < matrix.getNumCols(); ++j) {
                 // ToDo: Solve possible numeric error (due to float addition).
-                float item = std::exp(matrix.getItem(i, j));
+                float item = std::exp(matrix.getItem(i, j) - rowMax);
                 rowSum += item;
                 matrix.setItem(i, j, item);
             }
