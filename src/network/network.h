@@ -53,6 +53,8 @@ public:
     }
 
     void forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<ELEMENT_TYPE> &labels) {
+        activationResults.clear();
+        activationDerivResults.clear();
         // Input layer has activation fn equal to identity.
         activationResults.push_back(data);
 
@@ -105,7 +107,7 @@ public:
         size_t numLayers = networkConfig.layersConfig.size();
         // Derivative of Softmax and CrossEntropy = (y' - y), where y' is predicted vector
         // and y is ground truth vector.
-        auto lastLayerOutputDelta = activationResults[numLayers - 2];
+        auto lastLayerOutputDelta = activationResults[numLayers - 1];
         for (size_t i = 0; i < lastLayerOutputDelta.getNumRows(); ++i) {
             for (size_t j = 0; j < lastLayerOutputDelta.getNumCols(); ++j) {
                 if (j == labels[i]) {
@@ -117,7 +119,8 @@ public:
 
         auto lastDelta = std::move(lastLayerOutputDelta);
         for (int i = numLayers - 2; i > 0; --i) {
-            auto newDelta = weights[i].transpose().matmul(lastDelta) * activationDerivResults[i - 1];
+            auto matmuls = lastDelta.matmul(weights[i].transpose());
+            auto newDelta = matmuls * activationDerivResults[i-1];
             deltas[i - 1] = newDelta;
             lastDelta = newDelta;
         }
@@ -126,12 +129,9 @@ public:
         for (size_t i = 0; i < numLayers - 1; ++i) {
             auto weightDelta = activationResults[i].transpose().matmul(deltas[i]);
             weights[i] -= weightDelta * eta;
-            weights[i].printMatrix();
-            std::cout << std::endl;
+            //weights[i].printMatrix();
+            //std::cout << std::endl;
         }
-
-        activationResults.clear();
-        activationDerivResults.clear();
     }
 };
 
