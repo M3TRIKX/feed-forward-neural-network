@@ -20,10 +20,9 @@ class Network {
     const Config &networkConfig;
     std::vector<Matrix<ELEMENT_TYPE>> weights;
     std::vector<std::vector<ELEMENT_TYPE>> biases;
-    // ToDo: These matrix vectors should be per thread, but for now it's for a single one.
-//    std::vector<std::vector<Matrix<ELEMENT_TYPE>>> results;
-    std::vector<std::vector<Matrix<ELEMENT_TYPE>>> activationDerivResults;
-    std::vector<std::vector<Matrix<ELEMENT_TYPE>>> activationResults;
+
+    std::vector<Matrix<ELEMENT_TYPE>> activationDerivResults;
+    std::vector<Matrix<ELEMENT_TYPE>> activationResults;
 
     std::vector<Matrix<ELEMENT_TYPE>> deltas;
 
@@ -34,12 +33,6 @@ public:
         // ToDo: Alloc based on the num of threads
         activationDerivResults.emplace_back();
         activationResults.emplace_back();
-
-        activationDerivResults[0].reserve(config.layersConfig.size());
-        activationResults[0].reserve(config.layersConfig.size());
-
-//        deltaBiases.emplace_back();
-//        deltas.emplace_back();
 
         deltas.reserve(config.layersConfig.size());
 
@@ -55,23 +48,23 @@ public:
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
 
-            deltas.emplace_back(layer.numNeurons, nextLayer.numNeurons, 0);
+            deltas.emplace_back(0, 0, 0);
         }
     }
 
     void forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<ELEMENT_TYPE> &labels) {
         // Input layer has activation fn equal to identity.
-        activationResults[0].push_back(data);
+        activationResults.push_back(data);
 
         auto tmp = data.matmul(weights[0], static_cast<int>(networkConfig.batchSize));
         tmp += biases[0];
 
         networkConfig.layersConfig[1].activationFunction(tmp);
-        activationResults[0].push_back(tmp);
+        activationResults.push_back(tmp);
 
         auto tmpCopy = tmp;
         networkConfig.layersConfig[1].activationDerivFunction(tmpCopy);
-        activationDerivResults[0].push_back(tmpCopy);
+        activationDerivResults.push_back(tmpCopy);
 
 //        tmp.printMatrix();
 //        std::cout << std::endl;
@@ -82,15 +75,15 @@ public:
 
             // i + 1 due to the way we store activation functions.
             networkConfig.layersConfig[i + 1].activationFunction(tmp);
-            activationResults[0].push_back(tmp);
+            activationResults.push_back(tmp);
 
             if (i == weights.size() - 1) {
-                activationDerivResults[0].emplace_back();
+                activationDerivResults.emplace_back();
             }
             else {
                 auto tmpCopy = tmp;
                 networkConfig.layersConfig[i + 1].activationDerivFunction(tmpCopy);
-                activationDerivResults[0].push_back(tmpCopy);
+                activationDerivResults.push_back(tmpCopy);
             }
 
 //            tmp.printMatrix();
@@ -112,7 +105,7 @@ public:
         size_t numLayers = networkConfig.layersConfig.size();
         // Derivative of Softmax and CrossEntropy = (y' - y), where y' is predicted vector
         // and y is ground truth vector.
-        auto lastLayerOutputDelta = activationResults[0][numLayers - 2];
+        auto lastLayerOutputDelta = activationResults[numLayers - 2];
         for (size_t i = 0; i < lastLayerOutputDelta.getNumRows(); ++i) {
             for (size_t j = 0; j < lastLayerOutputDelta.getNumCols(); ++j) {
                 if (j == labels[i]) {
@@ -124,22 +117,21 @@ public:
 
         auto lastDelta = std::move(lastLayerOutputDelta);
         for (int i = numLayers - 2; i > 0; --i) {
-//            auto x = lastDelta.matmul(weights[i].transpose());
-            auto newDelta = weights[i].transpose().matmul(lastDelta) * activationDerivResults[0][i - 1];
+            auto newDelta = weights[i].transpose().matmul(lastDelta) * activationDerivResults[i - 1];
             deltas[i - 1] = newDelta;
             lastDelta = newDelta;
         }
 
         // Update weights
         for (size_t i = 0; i < numLayers - 1; ++i) {
-            auto weightDelta = activationResults[0][i].transpose().matmul(deltas[i]);
+            auto weightDelta = activationResults[i].transpose().matmul(deltas[i]);
             weights[i] -= weightDelta * eta;
             weights[i].printMatrix();
             std::cout << std::endl;
         }
 
-        activationResults[0].clear();
-        activationDerivResults[0].clear();
+        activationResults.clear();
+        activationDerivResults.clear();
     }
 };
 

@@ -9,6 +9,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <functional>
 #include "../activation_functions/functions_enum.h"
 #include "../activation_functions/fast_sigmoid.h"
 #include "../activation_functions/relu.h"
@@ -41,44 +42,9 @@ class Config {
     size_t batchSize = 1;
 
 public:
-    auto &addLayer(size_t numNeurons, ActivationFunction activationFunction = ActivationFunction::Identity) {
-        ActivationFunction_t fn{};
-        ActivationFunction_t fnDeriv{};
+    Config &addLayer(size_t nNeurons, ActivationFunction activationFunction = ActivationFunction::Identity);
 
-        switch (activationFunction) {
-            case Identity:
-                // Leave fn empty
-                break;
-
-            case ReLU:
-                fn = ReLU::normal;
-                fnDeriv = ReLU::derivative;
-                break;
-
-            case Sigmoid:
-                fn = Sigmoid::normal;
-                break;
-
-            case FastSigmoid:
-                fn = FastSigmoid::normal;
-                break;
-
-            case SoftMax:
-                fn = SoftMax::normal;
-                break;
-
-            default:
-                throw WrongActivationFunction();
-        }
-
-        layersConfig.emplace_back(numNeurons, activationFunction, fn, fnDeriv);
-        return *this;
-    }
-
-    auto &setBatchSize(size_t size) {
-        batchSize = size;
-        return *this;
-    }
+    Config &setBatchSize(size_t size);
 
 private:
     friend class Network;

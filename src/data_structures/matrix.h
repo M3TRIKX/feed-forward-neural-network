@@ -2,13 +2,13 @@
 // Created by Dáša Pawlasová on 12.10.2021.
 //
 
+#ifndef FEEDFORWARDNEURALNET_MATRIX_H
+#define FEEDFORWARDNEURALNET_MATRIX_H
+
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <vector>
-
-#ifndef FEEDFORWARDNEURALNET_MATRIX_H
-#define FEEDFORWARDNEURALNET_MATRIX_H
 
 class MatrixSizeException: std::exception {};
 
@@ -80,6 +80,23 @@ public:
             for (size_t j = 0; j < cols; ++j) {
                 res.matrix[i][j] = generateRandomDecimal(min, max);
             }
+        }
+
+        return res;
+    }
+
+    static auto generateBatches(const Matrix<ELEMENT_TYPE> &mat, size_t batchSize) {
+        auto currentIt = mat.matrix.begin();
+        size_t alreadyProcessed = 0;
+        size_t matRows = mat.numRows;
+
+        std::vector<Matrix<ELEMENT_TYPE>> res;
+
+        while (alreadyProcessed < mat.getNumRows()) {
+            auto minSize = std::min(matRows - alreadyProcessed, batchSize);
+            res.emplace_back(std::vector<std::vector<ELEMENT_TYPE>>(currentIt, currentIt + minSize));
+            alreadyProcessed += batchSize;
+            std::advance(currentIt, batchSize);
         }
 
         return res;
@@ -318,6 +335,8 @@ public:
     friend bool operator!=(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         return !(lhs == rhs);
     }
+
+    friend class DataManager;
 
 private:
     static ELEMENT_TYPE generateRandomDecimal(ELEMENT_TYPE min, ELEMENT_TYPE max) {

@@ -20,7 +20,7 @@ public:
 
     }
 
-    static type derivative(Matrix<type> &matrix) {
+    static void derivative(Matrix<type> &matrix) {
         auto fn = [](type x) {
             return x > 0 ? 1 : 0;
         };

@@ -143,11 +143,15 @@ public:
         return dataMatrix;
     }
 
+    auto &&getDataMatrixRvalRef() {
+        return std::move(dataMatrix);
+    }
+
     /**
      *
      * @return num of CSV rows
      */
-    auto getNumOfRows() {
+    auto getNumOfRows() const {
         return dataMatrix.getNumRows();
     }
 
