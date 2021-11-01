@@ -20,10 +20,12 @@ Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunctio
 
         case Sigmoid:
             fn = Sigmoid::normal;
+//            fnDeriv = Sigmoid::derivative;
             break;
 
         case FastSigmoid:
             fn = FastSigmoid::normal;
+            fnDeriv = FastSigmoid::derivative;
             break;
 
         case SoftMax:

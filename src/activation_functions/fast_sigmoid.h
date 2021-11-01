@@ -20,12 +20,14 @@ public:
             return x / (1 + abs(x));
         };
         matrix.applyFunction(fn);
-//        return x / (1 + abs(x));
     }
 
-    static type derivative(type x) {
-        type n = x / (1 + abs(x));
-        return n * n;
+    static void derivative(Matrix<type> &matrix) {
+        auto fn = [] (type x) {
+            return x / (1 + abs(x));
+        };
+
+        matrix.applyFunction(fn);
     }
 };
 
