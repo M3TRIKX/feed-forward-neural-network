@@ -43,7 +43,7 @@ public:
             const auto &layer = config.layersConfig[i];
             const auto &nextLayer = config.layersConfig[i + 1];
             // ToDo: Add more sophisticated weight initialization.
-            weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -0.14, 0.14));
+            weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -1, 1));
 
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
@@ -52,13 +52,13 @@ public:
         }
     }
 
-    void forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<ELEMENT_TYPE> &labels) {
+    const auto &forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<ELEMENT_TYPE> &labels) {
         activationResults.clear();
         activationDerivResults.clear();
         // Input layer has activation fn equal to identity.
         activationResults.push_back(data);
 
-        auto tmp = data.matmul(weights[0], static_cast<int>(networkConfig.batchSize));
+        auto tmp = data.matmul(weights[0]);
         tmp += biases[0];
 
         networkConfig.layersConfig[1].activationFunction(tmp);
@@ -95,6 +95,8 @@ public:
         // ToDo: Change size_t to int during reading - choose the type.
         auto stats = StatsPrinter::getStats(tmp, std::vector<size_t>(labels.cbegin(), labels.cend()));
         std::cout << "ACC: " << stats.accuracy << " CE: " << stats.crossEntropy << std::endl;
+
+        return activationResults[activationResults.size() - 1];
     }
 
     void backProp(const std::vector<ELEMENT_TYPE> &labels, float eta) {
@@ -125,12 +127,25 @@ public:
             lastDelta = newDelta;
         }
 
+        size_t numOfObservations = labels.size();
+
         // Update weights
         for (size_t i = 0; i < numLayers - 1; ++i) {
             auto weightDelta = activationResults[i].transpose().matmul(deltas[i]);
-            weights[i] -= weightDelta * eta;
-            //weights[i].printMatrix();
-            //std::cout << std::endl;
+            weights[i] -= weightDelta * (eta / numOfObservations);
+
+            // Bias computation
+            // ToDo: Make this code faster even tho i have no idea how.
+            std::vector<ELEMENT_TYPE> biasDelta(biases[i].size(), 0);
+            for (size_t j = 0; j < deltas[i].getNumRows(); ++j) {
+                for (size_t k = 0; k < deltas[i].getNumCols(); ++k) {
+                    biasDelta[k] += deltas[i].getItem(j, k);
+                }
+            }
+
+            for (size_t j = 0; j < biases[i].size(); ++j) {
+                biases[i][j] -= (eta / numOfObservations) * biasDelta[j];
+            }
         }
     }
 };
