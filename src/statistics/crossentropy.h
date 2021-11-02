@@ -23,7 +23,7 @@ public:
                 crossentropy -= expectedValue * log(calculatedValue + zeroCorrection) + (1 - expectedValue) * log(1 - calculatedValue + zeroCorrection);
             }
         }
-        return crossentropy;
+        return crossentropy/expected.size();
     }
 
     auto static crossentropyDerivative(Matrix<float> &predicted, const std::vector<size_t> &expected){
