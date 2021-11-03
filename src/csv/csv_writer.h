@@ -7,14 +7,7 @@
 
 #include <iostream>
 #include <sstream>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <array>
 #include <vector>
-#include <cstring>
 #include <fstream>
 #include "../data_structures/matrix.h"
 

@@ -39,8 +39,3 @@ Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunctio
     layersConfig.emplace_back(numNeurons, activationFunction, fn, fnDeriv);
     return *this;
 }
-
-Config &Config::setBatchSize(size_t size) {
-    batchSize = size;
-    return *this;
-}

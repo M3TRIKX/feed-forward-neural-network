@@ -18,19 +18,18 @@ class WrongSplitBatchesException : public std::exception{};
 class WrongInputMatricesException : public std::exception{};
 
 struct DataLabelsShuffle_t {
-    using ELEMEN_TYPE = float;
-
-    Matrix<ELEMEN_TYPE> data;
-    Matrix<ELEMEN_TYPE> labels;
+    Matrix<float> data;
+    Matrix<unsigned int> labels;
 };
 
 struct TrainValSplit_t {
     using elem_type = float;
+    using label_type = unsigned int;
 
     Matrix<elem_type> trainData;
-    Matrix<elem_type> trainLabels;
+    Matrix<label_type> trainLabels;
     Matrix<elem_type> validationData;
-    Matrix<elem_type> validationLabels;
+    Matrix<label_type> validationLabels;
 };
 
 class DataManager {
@@ -41,10 +40,23 @@ public:
     /**
      * Splits data into training and validation set.
      * numOfTrainSamples must be greater or equal to the number of data samples.
+     *
+     * @param dataMatrix        Data we want to split
+     * @param labelsMatrix      Labels we want to split
+     * @param numOfTrainSamples Number of samples we want to have in the training set
+     *                          (the validation one will contain the rest).
+     * @return Split dataset
      */
-    static TrainValSplit_t trainValidateSplit(const Matrix<elem_type> &dataMatrix, const Matrix<elem_type> &labelsMatrix, size_t numOfTrainSamples);
+    static TrainValSplit_t trainValidateSplit(const Matrix<elem_type> &dataMatrix, const Matrix<unsigned int> &labelsMatrix, size_t numOfTrainSamples);
 
-    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, Matrix<elem_type> &&labelsMatrix);
+    /**
+     * Shuffles the data and the labels randomly (both the same way).
+     *
+     * @param dataMatrix   Data we want to shuffle
+     * @param labelsMatrix Labels we want to shuffle (corresponds to the data)
+     * @return Shuffled matrices.
+     */
+    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, Matrix<unsigned int> &&labelsMatrix);
 };
 
 

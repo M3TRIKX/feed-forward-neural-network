@@ -18,7 +18,7 @@ public:
      * @param expected - expected labels
      * @return accuracy of NN predictions
      */
-    auto static accuracy(const std::vector<size_t> &predicted, const std::vector<size_t> &expected){
+    auto static accuracy(const std::vector<unsigned int> &predicted, const std::vector<unsigned int > &expected){
         float correctPredictions = 0;
         for (size_t i = 0; i < predicted.size(); i++){
             if (predicted[i] == expected[i]){

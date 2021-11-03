@@ -17,9 +17,8 @@
 
 class CsvReadError: std::exception {};
 
+template <typename ELEMENT_TYPE>
 class CsvReader {
-    using ELEMENT_TYPE = float;
-
     int fd = 0;
     bool closed = false;
     std::vector<std::vector<ELEMENT_TYPE>> data;

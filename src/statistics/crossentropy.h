@@ -14,28 +14,36 @@
 class CrossentropyFunction {
     constexpr static float zeroCorrection = 1e-15;
 public:
-    auto static crossentropy(const Matrix<float> &predicted, const std::vector<size_t> &expected){
-        float crossentropy = 0;
+    auto static crossentropy(const Matrix<float> &predicted, const std::vector<unsigned int> &expected){
+        float crossEntropyRes = 0;
+
         for (size_t i = 0; i < predicted.getNumRows(); i++){
             for (size_t j = 0; j < predicted.getNumCols(); j++){
-                int expectedValue = expected[i] == j ? 1 : 0;
+                float expectedValue = expected[i] == j ? 1.f : 0.f;
                 float calculatedValue = predicted.getItem(i, j);
-                crossentropy -= expectedValue * log(calculatedValue + zeroCorrection) + (1 - expectedValue) * log(1 - calculatedValue + zeroCorrection);
+                crossEntropyRes -= expectedValue * log(calculatedValue + zeroCorrection) + (1 - expectedValue) * log(1 - calculatedValue + zeroCorrection);
             }
         }
-        return crossentropy/expected.size();
+        return crossEntropyRes / static_cast<float>(expected.size());
     }
 
-    auto static crossentropyDerivative(Matrix<float> &predicted, const std::vector<size_t> &expected){
-        float crossentropy = 0;
-        for (size_t i = 0; i < predicted.getNumRows(); i++){
-            for (size_t j = 0; j < predicted.getNumCols(); j++){
-                int expectedValue = expected[i] == j ? 1 : 0;
-                float calculatedValue = predicted.getItem(i, j);
-                crossentropy -= expectedValue / calculatedValue + (1 - expectedValue) / (1 - calculatedValue);
-            }
+    /**
+     * Calculates the derivative CE with SoftMax act. fn in the last layer.
+     * The derivative is: (y' - y), where y' is the predicted vector.
+     * @param predicted
+     * @param expected
+     * @param labels
+     * @return
+     */
+    auto static costDelta(const Matrix<float> &lastLayerActivationResults, const std::vector<unsigned int> &labels) {
+        auto delta = lastLayerActivationResults;
+
+        for (size_t i = 0; i < delta.getNumRows(); ++i) {
+            auto j = static_cast<size_t>(labels[i]);
+            delta.setItem(i, j, delta.getItem(i, j) - 1);
         }
-        return crossentropy;
+
+        return delta;
     }
 };
 #endif //FEEDFORWARDNEURALNET_CROSSENTROPY_H

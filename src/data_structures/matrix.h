@@ -24,8 +24,7 @@ class Matrix {
     static const int DECIMAL_PLACES_IN_PRINT = 4;
 
 public:
-
-    Matrix() = default;
+    Matrix(): numRows(0), numCols(0) {}
 
     /**
      * Matrix class constructor, initiates the matrix with zeros
@@ -49,7 +48,7 @@ public:
      * @param matrix - 2D array we want to create the matrix from
      */
     Matrix(std::vector<std::vector<ELEMENT_TYPE>> &&vecMatrix) {
-        if (vecMatrix.size() == 0) {
+        if (vecMatrix.empty()) {
             throw std::exception();
         }
 
@@ -123,7 +122,7 @@ public:
         return matrix[row];
     }
 
-    const auto getMatrixCol(size_t col) const {
+    auto getMatrixCol(size_t col) const {
         std::vector<ELEMENT_TYPE> res(numRows, 0);
 
         for (size_t i = 0; i < numRows; ++i) {
@@ -325,15 +324,6 @@ public:
             }
         }
         return lhs;
-    }
-
-    // Equal operators
-    friend bool operator==(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
-        return lhs.matrix == rhs.matrix;
-    }
-
-    friend bool operator!=(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
-        return !(lhs == rhs);
     }
 
     friend class DataManager;

@@ -28,11 +28,10 @@ public:
      * @param expected - expected labels
      * @return stats as a hashmap
      */
-    static Stats getStats(const Matrix<float> &predicted, const std::vector<size_t> &expected) {
+    static Stats getStats(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
         float accuracy = AccuracyFunction::accuracy(ArgmaxFunction::argmax(predicted), expected);
         float crossentropy = CrossentropyFunction::crossentropy(predicted, expected);
-        return { .accuracy=accuracy, .crossEntropy=crossentropy };
-//        return std::map<std::string, float> {{"accuracy", accuracy}, {"crossentropy", crossentropy}};
+        return {.accuracy=accuracy, .crossEntropy=crossentropy};
     }
 
     /**
@@ -44,15 +43,29 @@ public:
      * @param epoch - current epoch
      * @param totalEpochs - total amount of epochs
      */
-    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<size_t> &trainExpectedLabels,
-                                  const Matrix<float> &valOutput, const std::vector<size_t> &valExpectedLabels, int epoch, int totalEpochs) {
+    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<unsigned int> &trainExpectedLabels,
+                                  const Matrix<float> &valOutput, const std::vector<unsigned int> &valExpectedLabels,
+                                  size_t epoch, size_t totalEpochs) {
         auto trainStats = getStats(trainOutput, trainExpectedLabels);
         auto valStats = getStats(valOutput, valExpectedLabels);
+        printProgressLine(trainStats.accuracy, trainStats.crossEntropy, valStats.accuracy, valStats.crossEntropy, epoch,
+                          totalEpochs);
+    }
+
+    static void printProgressLine(float avgTrainAcc, float avgTrainCE, const Matrix<float> &valPredicted,
+                                  const std::vector<unsigned int> &valExpected, size_t epoch, size_t totalEpochs) {
+        auto valStats = getStats(valPredicted, valExpected);
+        printProgressLine(avgTrainAcc, avgTrainCE, valStats.accuracy, valStats.crossEntropy, epoch, totalEpochs);
+    }
+
+    static void
+    printProgressLine(float trainAcc, float trainCE, float valAcc, float valCE, size_t epoch, size_t totalEpochs) {
         std::cout << "Epoch: " << epoch << "/" << totalEpochs;
-        std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats.accuracy;
-        std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainStats.crossEntropy;
-        std::cout << "    ValAccuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats.accuracy;
-        std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valStats.crossEntropy << std::endl;
+        std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainAcc;
+        std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainCE;
+        std::cout << "    ValAccuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valAcc;
+        std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valCE << std::endl;
     }
 };
+
 #endif //FEEDFORWARDNEURALNET_STATS_PRINTER_H

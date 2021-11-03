@@ -39,12 +39,9 @@ class Config {
     using ActivationFunction_t = std::function<void(Matrix<ELEMENT_TYPE> &)>;
 
     std::vector<LayerConfig> layersConfig;
-    size_t batchSize = 1;
 
 public:
     Config &addLayer(size_t nNeurons, ActivationFunction activationFunction = ActivationFunction::Identity);
-
-    Config &setBatchSize(size_t size);
 
 private:
     friend class Network;
