@@ -8,7 +8,9 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <random>
 #include <vector>
+#include <omp.h>
 
 class MatrixSizeException: std::exception {};
 
@@ -78,6 +80,22 @@ public:
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
                 res.matrix[i][j] = generateRandomDecimal(min, max);
+            }
+        }
+
+        return res;
+    }
+
+    static Matrix<ELEMENT_TYPE> generateRandomUniformMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
+        Matrix res(rows, cols);
+        std::random_device rd;
+        // ToDo Use random device instead of fixed seed.
+        std::mt19937 g(rd());
+        std::uniform_real_distribution<> distribution(min, max);
+
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                res.matrix[i][j] = distribution(g);
             }
         }
 
@@ -165,9 +183,9 @@ public:
      */
     Matrix matmul(const Matrix &m2, int numRowsToMultiply = -1) const {
         if (numRowsToMultiply == -1) {
-            return slowMatmul(m2, getNumRows());
+            return fasterSlowMatmul(m2, getNumRows());
         }
-        return slowMatmul(m2, numRowsToMultiply);
+        return fasterSlowMatmul(m2, numRowsToMultiply);
     }
 
     Matrix transpose() {
@@ -190,6 +208,7 @@ public:
     template<typename F>
     void applyFunction(F f) {
         for (size_t i = 0; i < getNumRows(); i++) {
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] = f(matrix[i][j]);
             }
@@ -246,6 +265,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] -= rhs.getItem(i,j);
             }
@@ -265,6 +285,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] *= rhs.getItem(i,j);
             }
@@ -319,6 +340,7 @@ public:
 
     friend auto operator*(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
         for (size_t i = 0; i < lhs.numRows; ++i) {
+            #pragma omp simd
             for (size_t j = 0; j < lhs.numCols; ++j) {
                 lhs.matrix[i][j] *= x;
             }
@@ -349,6 +371,59 @@ private:
             for (size_t j = 0; j < rhs.numCols; ++j) {
                 for (size_t k = 0; k < numCols; ++k) {
                     res.matrix[i][j] += getItem(i, k) * rhs.getItem(k, j);
+                }
+            }
+        }
+
+        return res;
+    }
+
+    Matrix fasterSlowMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
+        if (numCols != rhs.numRows) {
+            throw MatrixSizeException();
+        }
+
+        Matrix res(numRowsToMultiply, rhs.numCols, 0);
+
+        omp_set_num_threads(4);
+#pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
+        {
+#pragma omp for
+            for (size_t i = 0; i < numRowsToMultiply; ++i) {
+                for (size_t k = 0; k < numCols; ++k) {
+                    float x = getItem(i, k);
+#pragma omp simd
+                    for (size_t j = 0; j < rhs.numCols; ++j) {
+                        res.matrix[i][j] += x * rhs.getItem(k, j);
+                    }
+                }
+            }
+        };
+#pragma omp barrier
+
+        return res;
+    }
+
+    Matrix fasterBlockMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
+        if (numCols != rhs.numRows) {
+            throw MatrixSizeException();
+        }
+
+        Matrix res(numRowsToMultiply, rhs.numCols, 0);
+
+        constexpr int blockASize = 1;
+        constexpr int blockBSize = 16;
+        constexpr int tileSize = 8;
+        float blockSum[blockASize][blockBSize] = {{0.0f}};
+
+        for (size_t i = 0; i < numRowsToMultiply; ++i) {
+            for (size_t j = 0; j < numCols; ++j) {
+                float x = getItem(i, j);
+                for (size_t k = 0; k < rhs.numCols; k += blockBSize) {
+                    #pragma omp simd
+                    for (size_t m = 0; m < blockBSize; ++m) {
+                        res.matrix[i][k + m] += x * rhs.getItem(j, k + m);
+                    }
                 }
             }
         }

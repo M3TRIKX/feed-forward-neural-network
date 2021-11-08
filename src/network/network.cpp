@@ -2,7 +2,9 @@
 // Created by dominik on 22. 10. 2021.
 //
 
+#include <chrono>
 #include "network.h"
+#include "../statistics/weights_info.h"
 
 auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<unsigned int> &labels) {
     activationResults.clear();
@@ -52,6 +54,9 @@ void Network::backProp(const std::vector<unsigned int> &labels, float eta) {
         throw WrongOutputActivationFunction();
     }
 
+    float lambda = 0.02;
+    float l2Coeff = 1 - eta * lambda / static_cast<float>(labels.size());
+
     size_t numLayers = networkConfig.layersConfig.size();
     float batchEta = eta / static_cast<float>(labels.size());
 
@@ -67,6 +72,8 @@ void Network::backProp(const std::vector<unsigned int> &labels, float eta) {
     // Update weights
     for (size_t i = 0; i < numLayers - 1; ++i) {
         auto weightDelta = activationResults[i].transpose().matmul(deltas[i]);
+        // L2 regularization (weight decay).
+        weights[i] = weights[i] * l2Coeff;
         weights[i] -= weightDelta * batchEta;
 
         // Bias computation
@@ -85,6 +92,10 @@ void Network::backProp(const std::vector<unsigned int> &labels, float eta) {
 }
 
 void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpochs, size_t batchSize) {
+    if (eta < 0) {
+        throw NegativeEtaException();
+    }
+
     auto &train_X = trainValSplit.trainData;
     auto &train_y = trainValSplit.trainLabels;
     auto &validation_X = trainValSplit.validationData;
@@ -100,6 +111,8 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
 //    const float etaDecrease = (eta - 0.01f) / static_cast<float>(numEpochs);
 
     for (size_t i = 0; i < numEpochs; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+
         for (size_t j = 0; j < numBatches; ++j) {
             // ToDo: Optimise
             auto labels = trainBatches_y[j].getMatrixCol(0);
@@ -109,6 +122,10 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
 
             backProp(labels, eta);
         }
+
+//        for (const auto &singleWeights : weights) {
+//            WeightInfo::printWeightStats(singleWeights, true);
+//        }
 
         auto valLabels = validation_y.getMatrixCol(0);
         auto predicted = predict(validation_X);
@@ -123,6 +140,12 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
 
         accSum = 0;
         ceSum = 0;
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = duration_cast<std::chrono::microseconds>(end - start);
+
+        std::cout << "Time taken by function: "
+             << duration.count() << " microseconds" << std::endl;
 
 //        eta -= etaDecrease;
     }

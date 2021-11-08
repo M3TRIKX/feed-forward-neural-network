@@ -13,6 +13,7 @@
 
 class WrongInputDataDimension : public std::exception {};
 class WrongOutputActivationFunction : public std::exception{};
+class NegativeEtaException : public std::exception{};
 
 class Network {
     using ELEMENT_TYPE = float;
@@ -42,8 +43,21 @@ public:
         for (size_t i = 0; i < config.layersConfig.size() - 1; ++i) {
             const auto &layer = config.layersConfig[i];
             const auto &nextLayer = config.layersConfig[i + 1];
-            // ToDo: Add more sophisticated weight initialization.
-            weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -1, 1));
+
+            // Uniform HE initialization
+            if (nextLayer.activationFunctionType == ActivationFunction::ReLU) {
+                float limit = 6 / sqrt(layer.numNeurons);
+                weights.push_back(Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit, limit));
+            }
+            // Uniform Glorot initialization
+            else if (nextLayer.activationFunctionType == ActivationFunction::SoftMax) {
+                float limit = 6 / sqrt(layer.numNeurons + nextLayer.numNeurons);
+                weights.push_back(Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit, limit));
+            }
+            // Random
+            else {
+                weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -1, 1));
+            }
 
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);

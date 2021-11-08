@@ -68,8 +68,8 @@ public:
         auto stats = statsOfWeights(weights);
         std::cout << "-----------Info about weights-----------" << std::endl;
         if(amountWeights){
-            std::cout << "Neurons in lower layer: " << weights.getNumCols() << std::endl;
-            std::cout << "Neurons in upper layer: " << weights.getNumRows() << std::endl;
+            std::cout << "Neurons in lower layer: " << weights.getNumRows() << std::endl;
+            std::cout << "Neurons in upper layer: " << weights.getNumCols() << std::endl;
             std::cout << "Amount of weights: " << weights.getNumCols() * weights.getNumRows() << std::endl;
         }
         std::cout << "Sum: " << stats.sum << std::endl;
