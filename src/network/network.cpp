@@ -55,9 +55,6 @@ void Network::backProp(const std::vector<unsigned int> &labels) {
         throw WrongOutputActivationFunction();
     }
 
-//    float lambda = 0.02;
-//    float l2Coeff = 1 - eta * lambda / static_cast<float>(labels.size());
-
     size_t numLayers = networkConfig.layersConfig.size();
 
     deltaWeights[numLayers - 2] = CrossentropyFunction::costDelta(activationResults[numLayers - 1], labels);
@@ -79,7 +76,7 @@ void Network::backProp(const std::vector<unsigned int> &labels) {
 }
 
 void Network::updateWeights(size_t batchSize, float eta) {
-    optimizer.update(deltaWeights, activationResults, deltaBiases, batchSize, eta);
+    optimizer->update(deltaWeights, activationResults, deltaBiases, batchSize, eta);
 }
 
 void Network::L2Regularization(float eta, float lambda, size_t batchSize) {
@@ -94,7 +91,7 @@ void Network::L2Regularization(float eta, float lambda, size_t batchSize) {
     }
 }
 
-void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda) {
+void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda, uint8_t verboseLevel) {
     if (eta < 0) {
         throw NegativeEtaException();
     }
@@ -126,29 +123,33 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             updateWeights(batchSize, eta);
         }
 
-        for (const auto &singleWeights : weights) {
-            WeightInfo::printWeightStats(singleWeights, true);
+        if (verboseLevel >= 2) {
+            for (const auto &singleWeights : weights) {
+                WeightInfo::printWeightStats(singleWeights, true);
+            }
         }
 
-        auto valLabels = validation_y.getMatrixCol(0);
-        auto predicted = predict(validation_X);
-        auto valStats = StatsPrinter::getStats(predicted, valLabels);
+        if (verboseLevel >= 1) {
+            auto valLabels = validation_y.getMatrixCol(0);
+            auto predicted = predict(validation_X);
+            auto valStats = StatsPrinter::getStats(predicted, valLabels);
 
-        StatsPrinter::printProgressLine(accSum / static_cast<float>(numBatches),
-                                        ceSum / static_cast<float>(numBatches),
-                                        valStats.accuracy,
-                                        valStats.crossEntropy,
-                                        i + 1,
-                                        numEpochs);
+            StatsPrinter::printProgressLine(accSum / static_cast<float>(numBatches),
+                                            ceSum / static_cast<float>(numBatches),
+                                            valStats.accuracy,
+                                            valStats.crossEntropy,
+                                            i + 1,
+                                            numEpochs);
 
-        accSum = 0;
-        ceSum = 0;
+            accSum = 0;
+            ceSum = 0;
 
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = duration_cast<std::chrono::microseconds>(end - start);
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = duration_cast<std::chrono::microseconds>(end - start);
 
-        std::cout << "Time taken by function: "
-             << duration.count() << " microseconds" << std::endl;
+            std::cout << "Time taken by function: "
+                      << duration.count() << " microseconds" << std::endl;
+        }
     }
 }
 

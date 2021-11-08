@@ -7,10 +7,10 @@
 
 #include "optimizer_template.h"
 
-class SGD : public Optimizer {
+class SGDOptimizer : public Optimizer {
 
 public:
-    SGD() = default;
+    SGDOptimizer() = default;
 
 
     /**

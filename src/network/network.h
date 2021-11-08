@@ -11,7 +11,6 @@
 #include "../statistics/stats_printer.h"
 #include "../data_manager/data_manager.h"
 #include "../optimizers/optimizer_template.h"
-#include "../optimizers/adam.h"
 
 class WrongInputDataDimension : public std::exception {};
 class WrongOutputActivationFunction : public std::exception{};
@@ -21,7 +20,7 @@ class Network {
     using ELEMENT_TYPE = float;
 
     const Config &networkConfig;
-    AdamOptimizer optimizer;
+    Optimizer *optimizer;
     std::vector<Matrix<ELEMENT_TYPE>> weights;
     std::vector<std::vector<ELEMENT_TYPE>> biases;
 
@@ -32,7 +31,7 @@ class Network {
     Matrix<ELEMENT_TYPE> deltaBiases;
 
 public:
-    Network(const Config &config): networkConfig(config) {
+    Network(const Config &config, Optimizer *optimizer): networkConfig(config), optimizer(optimizer) {
 //        srand(time(NULL));
 
         // ToDo: Alloc based on the num of threads
@@ -68,7 +67,9 @@ public:
 
             deltaWeights.emplace_back(0, 0, 0);
         }
-        optimizer = AdamOptimizer(weights, biases);
+
+        optimizer->setMatrices(weights, biases);
+        optimizer->init();
     }
 
     /**
@@ -78,7 +79,7 @@ public:
      * @param numEpochs     Number of loops through the training dataset
      * @param batchSize     Number of samples used for a single weight update
      */
-    void fit (const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta=0.1, float lambda=0.03);
+    void fit (const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta=0.1, float lambda=0.03, uint8_t verboseLevel = 0);
 
     /**
      * Predicts the data labels (should be ran on a trained network, otherwise it's just a random projection).
@@ -86,6 +87,10 @@ public:
      * @return Predicted labels (output activations per sample).
      */
     Matrix<ELEMENT_TYPE> predict(const Matrix<float> &data);
+
+    void setOptimizer(Optimizer *optimizer) {
+        this->optimizer = optimizer;
+    }
 
 private:
     /**

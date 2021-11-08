@@ -17,23 +17,19 @@ protected:
 public:
     Optimizer() = default;
 
-    Optimizer(std::vector<Matrix<float>> &weights, std::vector<std::vector<float>> &biases): weights(&weights), biases(&biases) {}
-
     /**
      * Updates weights and biases using choosen optimization technique
      * @param deltaWeights - Weight deltas
      * @param deltaBias - Bias deltas
      */
-    virtual void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, Matrix<float> &deltaBias, size_t batchSize, float eta){
-        float batchEta = eta / static_cast<float>(batchSize);
-        for (size_t layer = 0; layer < weights->size(); layer++) {
-            auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
-            (*weights)[layer] -= weightDelta * batchEta;
-            for (size_t i = 0; i < (*biases)[layer].size(); i++){
-                (*biases)[layer][i] -= batchEta * deltaBias.getItem(layer, i);
-            }
-        }
-    };
+    virtual void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, Matrix<float> &deltaBias, size_t batchSize, float eta) = 0;
+
+    virtual void init() {}
+
+    void setMatrices(std::vector<Matrix<float>> &weights, std::vector<std::vector<float>> &biases) {
+        this->weights = &weights;
+        this->biases = &biases;
+    }
 };
 
 #endif //FEEDFORWARDNEURALNET_OPTIMIZER_TEMPLATE_H
