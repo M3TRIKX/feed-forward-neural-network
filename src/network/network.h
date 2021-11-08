@@ -10,6 +10,8 @@
 #include "config.h"
 #include "../statistics/stats_printer.h"
 #include "../data_manager/data_manager.h"
+#include "../optimizers/optimizer_template.h"
+#include "../optimizers/adam.h"
 
 class WrongInputDataDimension : public std::exception {};
 class WrongOutputActivationFunction : public std::exception{};
@@ -18,13 +20,15 @@ class Network {
     using ELEMENT_TYPE = float;
 
     const Config &networkConfig;
+    AdamOptimizer optimizer;
     std::vector<Matrix<ELEMENT_TYPE>> weights;
     std::vector<std::vector<ELEMENT_TYPE>> biases;
 
     std::vector<Matrix<ELEMENT_TYPE>> activationDerivResults;
     std::vector<Matrix<ELEMENT_TYPE>> activationResults;
 
-    std::vector<Matrix<ELEMENT_TYPE>> deltas;
+    std::vector<Matrix<ELEMENT_TYPE>> deltaWeights;
+    Matrix<ELEMENT_TYPE> deltaBiases;
 
 public:
     Network(const Config &config): networkConfig(config) {
@@ -34,7 +38,7 @@ public:
         activationDerivResults.emplace_back();
         activationResults.emplace_back();
 
-        deltas.reserve(config.layersConfig.size());
+        deltaWeights.reserve(config.layersConfig.size());
 
         // We are initializing weights between each two layers.
         // weight[k][i][j] corresponds to the weight between neuron ith neuron in layer k
@@ -48,8 +52,9 @@ public:
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
 
-            deltas.emplace_back(0, 0, 0);
+            deltaWeights.emplace_back(0, 0, 0);
         }
+        optimizer = AdamOptimizer(weights, biases);
     }
 
     /**
@@ -83,9 +88,13 @@ private:
      * Updates weights and biases based on the forward pass
      * The forward pass must be ran beforehand
      * @param labels raw labels (not one-hot encoded)
-     * @param eta    learning rate
      */
-    void backProp(const std::vector<unsigned int> &labels, float eta);
+    void backProp(const std::vector<unsigned int> &labels);
+
+    /**
+     * Updates weights using selected optimizer
+     */
+    void updateWeights(size_t batchSize = 32);
 };
 
 #endif //FEEDFORWARDNEURALNET_NETWORK_H

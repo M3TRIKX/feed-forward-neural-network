@@ -46,42 +46,35 @@ auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<un
     return StatsPrinter::getStats(tmp, labels);
 }
 
-void Network::backProp(const std::vector<unsigned int> &labels, float eta) {
+void Network::backProp(const std::vector<unsigned int> &labels) {
+    deltaBiases = Matrix<ELEMENT_TYPE>(weights.size(), weights[0].getNumCols(), (float) 0);
     const auto &lastLayerConf = networkConfig.layersConfig[networkConfig.layersConfig.size() - 1];
     if (lastLayerConf.activationFunctionType != ActivationFunction::SoftMax) {
         throw WrongOutputActivationFunction();
     }
 
     size_t numLayers = networkConfig.layersConfig.size();
-    float batchEta = eta / static_cast<float>(labels.size());
 
-    deltas[numLayers - 2] = CrossentropyFunction::costDelta(activationResults[numLayers - 1], labels);
-    auto *lastDelta = &(deltas[numLayers - 2]);
+    deltaWeights[numLayers - 2] = CrossentropyFunction::costDelta(activationResults[numLayers - 1], labels);
+    auto *lastDelta = &(deltaWeights[numLayers - 2]);
 
     for (int i = static_cast<int>(numLayers) - 2; i > 0; --i) {
         auto matmuls = lastDelta->matmul(weights[i].transpose());
-        deltas[i - 1] = matmuls * activationDerivResults[i-1];
-        lastDelta = &(deltas[i - 1]);
+        deltaWeights[i - 1] = matmuls * activationDerivResults[i - 1];
+        lastDelta = &(deltaWeights[i - 1]);
     }
 
-    // Update weights
     for (size_t i = 0; i < numLayers - 1; ++i) {
-        auto weightDelta = activationResults[i].transpose().matmul(deltas[i]);
-        weights[i] -= weightDelta * batchEta;
-
-        // Bias computation
-        // ToDo: Make this code faster even tho i have no idea how.
-        std::vector<ELEMENT_TYPE> biasDelta(biases[i].size(), 0);
-        for (size_t j = 0; j < deltas[i].getNumRows(); ++j) {
-            for (size_t k = 0; k < deltas[i].getNumCols(); ++k) {
-                biasDelta[k] += deltas[i].getItem(j, k);
+        for (size_t j = 0; j < deltaWeights[i].getNumRows(); ++j) {
+            for (size_t k = 0; k < deltaWeights[i].getNumCols(); ++k) {
+                deltaBiases.setItem(i,k, deltaBiases.getItem(i,k) + deltaWeights[i].getItem(j, k));
             }
         }
-
-        for (size_t j = 0; j < biases[i].size(); ++j) {
-            biases[i][j] -= batchEta * biasDelta[j];
-        }
     }
+}
+
+void Network::updateWeights(size_t batchSize) {
+    optimizer.update(deltaWeights, activationResults, deltaBiases, batchSize);
 }
 
 void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpochs, size_t batchSize) {
@@ -107,7 +100,8 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
             accSum += stats.accuracy;
             ceSum += stats.crossEntropy;
 
-            backProp(labels, eta);
+            backProp(labels);
+            updateWeights();
         }
 
         auto valLabels = validation_y.getMatrixCol(0);
