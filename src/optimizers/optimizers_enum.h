@@ -1,0 +1,13 @@
+//
+// Created by Dominik Klement on 08/11/2021.
+//
+
+#ifndef FEEDFORWARDNEURALNET_OPTIMIZERS_ENUM_H
+#define FEEDFORWARDNEURALNET_OPTIMIZERS_ENUM_H
+
+enum class Optimizer{
+    SGD,
+    Adam
+};
+
+#endif //FEEDFORWARDNEURALNET_OPTIMIZERS_ENUM_H

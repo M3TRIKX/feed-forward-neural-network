@@ -24,7 +24,7 @@ class AdamOptimizer : public Optimizer{
 public:
     AdamOptimizer() = default;
     AdamOptimizer(std::vector<Matrix<float>> &networkWeights, std::vector<std::vector<float>> &networkBiases,
-            float beta1 = 0.9, float beta2 = 0.999, float eta = 0.01): Optimizer(networkWeights, networkBiases, eta){
+            float beta1 = 0.9, float beta2 = 0.999): Optimizer(networkWeights, networkBiases){
 
         this->beta1 = beta1;
         this->beta2 = beta2;
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, Matrix<float> &deltaBiases, size_t batchSize) override {
+    void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, Matrix<float> &deltaBiases, size_t batchSize, float eta) override {
         float batchEta = eta/batchSize;
         for (size_t layer = 0; layer < weights->size(); ++layer) {
             auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);

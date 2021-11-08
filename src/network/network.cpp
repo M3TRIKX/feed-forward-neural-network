@@ -78,11 +78,23 @@ void Network::backProp(const std::vector<unsigned int> &labels) {
     }
 }
 
-void Network::updateWeights(size_t batchSize) {
-    optimizer.update(deltaWeights, activationResults, deltaBiases, batchSize);
+void Network::updateWeights(size_t batchSize, float eta) {
+    optimizer.update(deltaWeights, activationResults, deltaBiases, batchSize, eta);
 }
 
-void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpochs, size_t batchSize) {
+void Network::L2Regularization(float eta, float lambda, size_t batchSize) {
+    if (lambda == 0) {
+        return;
+    }
+
+    float l2Coefficient = 1 - eta * lambda / static_cast<float>(batchSize);
+
+    for (auto &singleWeights : weights) {
+        singleWeights *= l2Coefficient;
+    }
+}
+
+void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda) {
     if (eta < 0) {
         throw NegativeEtaException();
     }
@@ -99,8 +111,6 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
     float ceSum = 0;
     size_t numBatches = trainBatches_X.size();
 
-//    const float etaDecrease = (eta - 0.01f) / static_cast<float>(numEpochs);
-
     for (size_t i = 0; i < numEpochs; ++i) {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -112,13 +122,13 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
             ceSum += stats.crossEntropy;
 
             backProp(labels);
-            // ToDo: L2
-            updateWeights(batchSize);
+            L2Regularization(eta, lambda, batchSize);
+            updateWeights(batchSize, eta);
         }
 
-//        for (const auto &singleWeights : weights) {
-//            WeightInfo::printWeightStats(singleWeights, true);
-//        }
+        for (const auto &singleWeights : weights) {
+            WeightInfo::printWeightStats(singleWeights, true);
+        }
 
         auto valLabels = validation_y.getMatrixCol(0);
         auto predicted = predict(validation_X);
@@ -139,8 +149,6 @@ void Network::fit(const TrainValSplit_t &trainValSplit, float eta, size_t numEpo
 
         std::cout << "Time taken by function: "
              << duration.count() << " microseconds" << std::endl;
-
-//        eta -= etaDecrease;
     }
 }
 

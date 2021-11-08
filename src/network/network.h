@@ -78,7 +78,7 @@ public:
      * @param numEpochs     Number of loops through the training dataset
      * @param batchSize     Number of samples used for a single weight update
      */
-    void fit (const TrainValSplit_t &trainValSplit, float eta=0.5, size_t numEpochs = 1, size_t batchSize = 32);
+    void fit (const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta=0.1, float lambda=0.03);
 
     /**
      * Predicts the data labels (should be ran on a trained network, otherwise it's just a random projection).
@@ -108,7 +108,9 @@ private:
     /**
      * Updates weights using selected optimizer
      */
-    void updateWeights(size_t batchSize = 32);
+    void updateWeights(size_t batchSize, float eta);
+
+    void L2Regularization(float eta, float lambda, size_t batchSize);
 };
 
 #endif //FEEDFORWARDNEURALNET_NETWORK_H

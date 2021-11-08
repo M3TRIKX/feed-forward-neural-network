@@ -10,7 +10,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
-#include <omp.h>
+//#include <omp.h>
 
 class MatrixSizeException: std::exception {};
 
@@ -208,7 +208,7 @@ public:
     template<typename F>
     void applyFunction(F f) {
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+            // #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] = f(matrix[i][j]);
             }
@@ -265,7 +265,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+            // #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] -= rhs.getItem(i,j);
             }
@@ -285,9 +285,20 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+            // #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] *= rhs.getItem(i,j);
+            }
+        }
+
+        return *this;
+    }
+
+    auto &operator*=(ELEMENT_TYPE x) {
+        for (size_t i = 0; i < numRows; ++i) {
+            // #pragma omp simd
+            for (size_t j = 0; j < numCols; ++j) {
+                matrix[i][j] *= x;
             }
         }
 
@@ -339,12 +350,7 @@ public:
     }
 
     friend auto operator*(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
-        for (size_t i = 0; i < lhs.numRows; ++i) {
-            #pragma omp simd
-            for (size_t j = 0; j < lhs.numCols; ++j) {
-                lhs.matrix[i][j] *= x;
-            }
-        }
+        lhs *= x;
         return lhs;
     }
 
@@ -385,21 +391,21 @@ private:
 
         Matrix res(numRowsToMultiply, rhs.numCols, 0);
 
-        omp_set_num_threads(4);
-#pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
+//        omp_set_num_threads(4);
+//// #pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
         {
-#pragma omp for
+//// #pragma omp for
             for (size_t i = 0; i < numRowsToMultiply; ++i) {
                 for (size_t k = 0; k < numCols; ++k) {
                     float x = getItem(i, k);
-#pragma omp simd
+//// #pragma omp simd
                     for (size_t j = 0; j < rhs.numCols; ++j) {
                         res.matrix[i][j] += x * rhs.getItem(k, j);
                     }
                 }
             }
         };
-#pragma omp barrier
+//// #pragma omp barrier
 
         return res;
     }
@@ -420,7 +426,7 @@ private:
             for (size_t j = 0; j < numCols; ++j) {
                 float x = getItem(i, j);
                 for (size_t k = 0; k < rhs.numCols; k += blockBSize) {
-                    #pragma omp simd
+                    // #pragma omp simd
                     for (size_t m = 0; m < blockBSize; ++m) {
                         res.matrix[i][k + m] += x * rhs.getItem(j, k + m);
                     }
