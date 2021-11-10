@@ -132,14 +132,28 @@ public:
         }
     }
 
+    /**
+     * Get matrix
+     * @return matrix
+     */
     const auto &getMatrix() const {
         return matrix;
     }
 
+    /**
+     * Get row of a matrix
+     * @param row - row index
+     * @return row of a matrix
+     */
     const auto &getMatrixRow(size_t row) const {
         return matrix[row];
     }
 
+    /**
+     * Get column of a matrix
+     * @param col - column index
+     * @return column of a matrix
+     */
     auto getMatrixCol(size_t col) const {
         std::vector<ELEMENT_TYPE> res(numRows, 0);
 
@@ -150,10 +164,22 @@ public:
         return res;
     }
 
+    /**
+     * Get item of a matrix
+     * @param row - row index
+     * @param col - column index
+     * @return item
+     */
     auto getItem(size_t row, size_t col) const {
         return matrix[row][col];
     }
 
+    /**
+     * Set item
+     * @param row - row index
+     * @param col - column index
+     * @param val - value to set
+     */
     void setItem(size_t row, size_t col, ELEMENT_TYPE val) {
         matrix[row][col] = val;
     }
@@ -188,6 +214,10 @@ public:
         return fasterSlowMatmul(m2, numRowsToMultiply);
     }
 
+    /**
+     * Transposes a matrix
+     * @return transposed matrix
+     */
     Matrix transpose() {
         Matrix res(numCols, numRows);
 
@@ -255,6 +285,21 @@ public:
     }
 
     /**
+     * Addition of value to each element in the matrix
+     * @param x - value to add to each row in the matrix
+     * @return this
+     */
+    auto &operator+=(ELEMENT_TYPE x) {
+        for (size_t i = 0; i < getNumRows(); ++i) {
+            for (size_t j = 0; j < getNumCols(); ++j) {
+                matrix[i][j] += x;
+            }
+        }
+
+        return *this;
+    }
+
+    /**
      * Subtraction of matrix to original matrix
      * @param rhs - matrix to subtract
      * @return this
@@ -294,6 +339,11 @@ public:
         return *this;
     }
 
+    /**
+     * Multiplication of matrix by value
+     * @param x - value to multiply by
+     * @return this
+     */
     auto &operator*=(ELEMENT_TYPE x) {
         for (size_t i = 0; i < numRows; ++i) {
             // #pragma omp simd
@@ -328,6 +378,17 @@ public:
     }
 
     /**
+     * Adds value to each row in the matrix lhs
+     * @param lhs - matrix which is copied and returned
+     * @param x - value to add
+     * @return result matrix
+     */
+    friend auto operator+(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
+        lhs += x;
+        return lhs;
+    }
+
+    /**
      * Addition of matrices
      * @param lhs - matrix which is copied and returned
      * @param rhs - matrix 2 which is subtracted to lhs
@@ -339,7 +400,7 @@ public:
     }
 
     /**
-      * Addition of matrices
+      * Multiplication of matrices
       * @param lhs - matrix which is copied and returned
       * @param rhs - matrix 2 which is
       * @return result matrix
@@ -349,9 +410,61 @@ public:
         return lhs;
     }
 
+    /**
+     * Multiplication of matrix by a value
+     * @param lhs - matrix to multiply
+     * @param x - value to multiply by
+     * @return multiplied lhs matrix
+     */
     friend auto operator*(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
         lhs *= x;
         return lhs;
+    }
+
+    /**
+     * Divide matrix by a value
+     * @param lhs - matrix to divide
+     * @param x - value to divide by
+     * @return divided lhs matrix
+     */
+    friend auto operator/(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
+        lhs *= 1/x;
+        return lhs;
+    }
+
+    /**
+     * Division of matrices
+     * @param lhs - matrix which is copied and returned
+     * @param rhs - matrix 2
+     * @return result matrix
+     */
+    friend auto operator/(Matrix<ELEMENT_TYPE> lhs, const Matrix<ELEMENT_TYPE> &rhs) {
+        for (size_t i = 0; i < lhs.numRows; ++i) {
+            // #pragma omp simd
+            for (size_t j = 0; j < lhs.numCols; ++j) {
+                lhs.setItem(i, j, lhs.getItem(i,j) / rhs.getItem(i,j));
+            }
+        }
+        return lhs;
+    }
+
+    /**
+     * Applies power of x to each element
+     * @param x - power
+     * @return Chenged matrix
+     */
+    auto pow(size_t x){
+        applyFunction([x](ELEMENT_TYPE k) {return (std::pow(k,x));});
+        return *this;
+    }
+
+    /**
+     * Applies sqrt to each element
+     * @return Changed matrix
+     */
+    auto sqrt(){
+        applyFunction([](ELEMENT_TYPE k) {return (std::sqrt(k));});
+        return *this;
     }
 
     friend class DataManager;

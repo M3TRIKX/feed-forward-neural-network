@@ -49,7 +49,6 @@ auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<un
 }
 
 void Network::backProp(const std::vector<unsigned int> &labels) {
-    deltaBiases = Matrix<ELEMENT_TYPE>(weights.size(), weights[0].getNumCols(), (float) 0);
     const auto &lastLayerConf = networkConfig.layersConfig[networkConfig.layersConfig.size() - 1];
     if (lastLayerConf.activationFunctionType != ActivationFunction::SoftMax) {
         throw WrongOutputActivationFunction();
@@ -69,7 +68,7 @@ void Network::backProp(const std::vector<unsigned int> &labels) {
     for (size_t i = 0; i < numLayers - 1; ++i) {
         for (size_t j = 0; j < deltaWeights[i].getNumRows(); ++j) {
             for (size_t k = 0; k < deltaWeights[i].getNumCols(); ++k) {
-                deltaBiases.setItem(i,k, deltaBiases.getItem(i,k) + deltaWeights[i].getItem(j, k));
+                deltaBiases[i][k] = deltaWeights[i].getItem(j, k);
             }
         }
     }
@@ -145,7 +144,7 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             ceSum = 0;
 
             auto end = std::chrono::high_resolution_clock::now();
-            auto duration = duration_cast<std::chrono::microseconds>(end - start);
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
             std::cout << "Time taken by function: "
                       << duration.count() << " microseconds" << std::endl;

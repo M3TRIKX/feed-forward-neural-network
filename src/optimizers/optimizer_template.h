@@ -14,22 +14,35 @@ class Optimizer{
 protected:
     std::vector<Matrix<float>> *weights = NULL;
     std::vector<std::vector<float>> *biases = NULL;
+
 public:
     Optimizer() = default;
 
     /**
-     * Updates weights and biases using choosen optimization technique
-     * @param deltaWeights - Weight deltas
-     * @param deltaBias - Bias deltas
+     * Initializes optimizer
      */
-    virtual void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, Matrix<float> &deltaBias, size_t batchSize, float eta) = 0;
-
     virtual void init() {}
 
+    /**
+     * Sets weights and biases to optimizer
+     * @param weights - Network weights
+     * @param biases - Network biases
+     */
     void setMatrices(std::vector<Matrix<float>> &weights, std::vector<std::vector<float>> &biases) {
         this->weights = &weights;
         this->biases = &biases;
     }
+
+    /**
+     * Updates weights and biases using choosen optimization technique
+     * @param deltaWeights - Weight deltas
+     * @param activationResults - Neuron potential values after application of activation function
+     * @param deltaBias - Bias deltas
+     * @param batchSize - Data batch size
+     * @param eta - Learning rate
+     */
+    virtual void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults,
+                        std::vector<std::vector<float>> &deltaBias, size_t batchSize, float eta) = 0;
 };
 
 #endif //FEEDFORWARDNEURALNET_OPTIMIZER_TEMPLATE_H

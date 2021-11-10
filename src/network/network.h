@@ -28,7 +28,7 @@ class Network {
     std::vector<Matrix<ELEMENT_TYPE>> activationResults;
 
     std::vector<Matrix<ELEMENT_TYPE>> deltaWeights;
-    Matrix<ELEMENT_TYPE> deltaBiases;
+    std::vector<std::vector<ELEMENT_TYPE>> deltaBiases;
 
 public:
     Network(const Config &config, Optimizer *optimizer): networkConfig(config), optimizer(optimizer) {
@@ -64,6 +64,7 @@ public:
 
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
+            deltaBiases.emplace_back(nextLayer.numNeurons, 0);
 
             deltaWeights.emplace_back(0, 0, 0);
         }
