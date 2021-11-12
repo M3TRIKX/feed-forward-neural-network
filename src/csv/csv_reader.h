@@ -13,6 +13,9 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <vector>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "../data_structures/matrix.h"
 
 class CsvReadError: std::exception {};
@@ -34,6 +37,7 @@ public:
         // Open the file and obtain the descriptor.
         fd = open(path, O_RDONLY);
         if (fd == -1) {
+            fprintf(stderr, "%s\n", strerror(errno));
             throw CsvReadError();
         }
 
@@ -60,6 +64,7 @@ public:
         // Memory mapped file -> faster reading.
         const char* addr = static_cast<const char*>(mmap(nullptr, fileLength, PROT_READ, MAP_PRIVATE, fd, 0u));
         if (addr == MAP_FAILED) {
+            fprintf(stderr, "%s\n", strerror(errno));
             throw CsvReadError();
         }
 

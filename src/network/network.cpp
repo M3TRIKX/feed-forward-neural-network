@@ -78,19 +78,21 @@ void Network::updateWeights(size_t batchSize, float eta) {
     optimizer->update(deltaWeights, activationResults, deltaBiases, batchSize, eta);
 }
 
-void Network::L2Regularization(float eta, float lambda, size_t batchSize) {
+void Network::weightDecay(float eta, float lambda, size_t batchSize, size_t epoch) {
     if (lambda == 0) {
         return;
     }
 
-    float l2Coefficient = 1 - eta * lambda / static_cast<float>(batchSize);
+//    float decayCoeff = 1.f - lambda * std::sqrt(batchSize) / std::sqrt(54000 * epoch);
+    float decayCoeff = 1.f - lambda;
+//    float decayCoeff = 1 - eta * lambda / static_cast<float>(batchSize);
 
     for (auto &singleWeights : weights) {
-        singleWeights *= l2Coefficient;
+        singleWeights *= decayCoeff;
     }
 }
 
-void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda, uint8_t verboseLevel) {
+void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda, uint8_t verboseLevel, LRScheduler *sched) {
     if (eta < 0) {
         throw NegativeEtaException();
     }
@@ -106,11 +108,16 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     float accSum = 0;
     float ceSum = 0;
     size_t numBatches = trainBatches_X.size();
+    size_t t = 0;
+
+    sched->setEta(eta);
 
     for (size_t i = 0; i < numEpochs; ++i) {
         auto start = std::chrono::high_resolution_clock::now();
 
         for (size_t j = 0; j < numBatches; ++j) {
+            eta = sched->exponential(t);
+
             // ToDo: Optimise
             auto labels = trainBatches_y[j].getMatrixCol(0);
             auto stats = forwardPass(trainBatches_X[j], labels);
@@ -118,8 +125,10 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             ceSum += stats.crossEntropy;
 
             backProp(labels);
-            L2Regularization(eta, lambda, batchSize);
+            weightDecay(eta, lambda, batchSize, i + 1);
             updateWeights(batchSize, eta);
+
+            t += batchSize;
         }
 
         if (verboseLevel >= 2) {
@@ -148,6 +157,7 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
 
             std::cout << "Time taken by function: "
                       << duration.count() << " microseconds" << std::endl;
+            std::cout << "ETA: " << eta << std::endl;
         }
     }
 }

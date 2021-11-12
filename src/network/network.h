@@ -11,10 +11,16 @@
 #include "../statistics/stats_printer.h"
 #include "../data_manager/data_manager.h"
 #include "../optimizers/optimizer_template.h"
+#include "../schedulers/lr_sheduler.h"
 
-class WrongInputDataDimension : public std::exception {};
-class WrongOutputActivationFunction : public std::exception{};
-class NegativeEtaException : public std::exception{};
+class WrongInputDataDimension : public std::exception {
+};
+
+class WrongOutputActivationFunction : public std::exception {
+};
+
+class NegativeEtaException : public std::exception {
+};
 
 class Network {
     using ELEMENT_TYPE = float;
@@ -31,7 +37,7 @@ class Network {
     std::vector<std::vector<ELEMENT_TYPE>> deltaBiases;
 
 public:
-    Network(const Config &config, Optimizer *optimizer): networkConfig(config), optimizer(optimizer) {
+    Network(const Config &config, Optimizer *optimizer) : networkConfig(config), optimizer(optimizer) {
 //        srand(time(NULL));
 
         // ToDo: Alloc based on the num of threads
@@ -50,14 +56,18 @@ public:
             // Uniform HE initialization
             if (nextLayer.activationFunctionType == ActivationFunction::ReLU) {
                 float limit = 6 / sqrt(layer.numNeurons);
-                weights.push_back(Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit, limit));
+                weights.push_back(
+                        Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit,
+                                                                   limit));
             }
-            // Uniform Glorot initialization
+                // Uniform Glorot initialization
             else if (nextLayer.activationFunctionType == ActivationFunction::SoftMax) {
                 float limit = 6 / sqrt(layer.numNeurons + nextLayer.numNeurons);
-                weights.push_back(Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit, limit));
+                weights.push_back(
+                        Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit,
+                                                                   limit));
             }
-            // Random
+                // Random
             else {
                 weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -1, 1));
             }
@@ -80,7 +90,8 @@ public:
      * @param numEpochs     Number of loops through the training dataset
      * @param batchSize     Number of samples used for a single weight update
      */
-    void fit (const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta=0.1, float lambda=0.03, uint8_t verboseLevel = 0);
+    void fit(const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta = 0.1,
+             float lambda = 1e-6, uint8_t verboseLevel = 0, LRScheduler *sched = nullptr);
 
     /**
      * Predicts the data labels (should be ran on a trained network, otherwise it's just a random projection).
@@ -116,7 +127,7 @@ private:
      */
     void updateWeights(size_t batchSize, float eta);
 
-    void L2Regularization(float eta, float lambda, size_t batchSize);
+    void weightDecay(float eta, float lambda, size_t batchSize, size_t epoch);
 };
 
 #endif //FEEDFORWARDNEURALNET_NETWORK_H

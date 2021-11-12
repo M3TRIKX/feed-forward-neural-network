@@ -21,7 +21,7 @@ public:
             auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
             (*weights)[layer] -= weightDelta * batchEta;
             for (size_t i = 0; i < (*biases)[layer].size(); i++){
-                (*biases)[layer][i] -= batchEta * deltaBias[layer][i]);
+                (*biases)[layer][i] -= batchEta * deltaBias[layer][i];
             }
         }
     };

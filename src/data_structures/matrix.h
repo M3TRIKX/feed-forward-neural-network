@@ -10,7 +10,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
-//#include <omp.h>
+#include <omp.h>
 
 class MatrixSizeException: std::exception {};
 
@@ -89,13 +89,29 @@ public:
     static Matrix<ELEMENT_TYPE> generateRandomUniformMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
         Matrix res(rows, cols);
         std::random_device rd;
-        // ToDo Use random device instead of fixed seed.
         std::mt19937 g(rd());
+//        std::mt19937 g(1);
         std::uniform_real_distribution<> distribution(min, max);
 
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
                 res.matrix[i][j] = distribution(g);
+            }
+        }
+
+        return res;
+    }
+
+    static Matrix<ELEMENT_TYPE> generateRandomMaskMatrix(size_t rows, size_t cols, float oneProp) {
+        Matrix res(rows, cols);
+
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::uniform_real_distribution<> dist(0, 1);
+
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                res.matrix[i][j] = dist(g) > oneProp ? 0.f : 1.f;
             }
         }
 
@@ -238,7 +254,7 @@ public:
     template<typename F>
     void applyFunction(F f) {
         for (size_t i = 0; i < getNumRows(); i++) {
-            // #pragma omp simd
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] = f(matrix[i][j]);
             }
@@ -257,6 +273,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
+#pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] += rhs.getItem(i,j);
             }
@@ -276,6 +293,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); ++i) {
+#pragma omp simd
             for (size_t j = 0; j < getNumCols(); ++j) {
                 matrix[i][j] += rhs[j];
             }
@@ -310,7 +328,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            // #pragma omp simd
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] -= rhs.getItem(i,j);
             }
@@ -330,7 +348,7 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            // #pragma omp simd
+            #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 matrix[i][j] *= rhs.getItem(i,j);
             }
@@ -346,7 +364,7 @@ public:
      */
     auto &operator*=(ELEMENT_TYPE x) {
         for (size_t i = 0; i < numRows; ++i) {
-            // #pragma omp simd
+            #pragma omp simd
             for (size_t j = 0; j < numCols; ++j) {
                 matrix[i][j] *= x;
             }
@@ -505,20 +523,20 @@ private:
         Matrix res(numRowsToMultiply, rhs.numCols, 0);
 
 //        omp_set_num_threads(4);
-//// #pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
+// #pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
         {
-//// #pragma omp for
+// #pragma omp for
             for (size_t i = 0; i < numRowsToMultiply; ++i) {
                 for (size_t k = 0; k < numCols; ++k) {
                     float x = getItem(i, k);
-//// #pragma omp simd
+#pragma omp simd
                     for (size_t j = 0; j < rhs.numCols; ++j) {
                         res.matrix[i][j] += x * rhs.getItem(k, j);
                     }
                 }
             }
         };
-//// #pragma omp barrier
+// #pragma omp barrier
 
         return res;
     }
@@ -530,18 +548,36 @@ private:
 
         Matrix res(numRowsToMultiply, rhs.numCols, 0);
 
-        constexpr int blockASize = 1;
-        constexpr int blockBSize = 16;
-        constexpr int tileSize = 8;
-        float blockSum[blockASize][blockBSize] = {{0.0f}};
+//        const int B = 5;
+//
+//        for (int ii = 0; ii < numRows; ii += B) {
+//            for (int jj = 0; jj < numRows; jj += B) {
+//                for (int kk = 0; kk < numRows; kk += B) {
+//                    for (int i = ii; i < ii + B; ++i) {
+//                        for (int j = jj; j < jj + B; ++j) {
+//                            float temp = 0;
+//                            for (int k = kk; k < kk + B; ++k) {
+//                                temp += getItem(i, k) * rhs.getItem(k, j);
+//                            }
+//
+//                            res.matrix[i][j] += temp;
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
-        for (size_t i = 0; i < numRowsToMultiply; ++i) {
-            for (size_t j = 0; j < numCols; ++j) {
-                float x = getItem(i, j);
-                for (size_t k = 0; k < rhs.numCols; k += blockBSize) {
-                    // #pragma omp simd
-                    for (size_t m = 0; m < blockBSize; ++m) {
-                        res.matrix[i][k + m] += x * rhs.getItem(j, k + m);
+        const int bsize = 32;
+        int en = bsize * (numRows / bsize);
+        for (int kk = 0; kk < en; kk += bsize) {
+            for (int jj = 0; jj < en; jj += bsize) {
+                for (int i = 0; i < numRows; ++i) {
+                    for (int j = jj; j < jj + bsize; ++j) {
+                        float sum = res.matrix[i][j];
+                        for (int k = kk; k < kk + bsize; ++k) {
+                            sum += getItem(i, k) * rhs.getItem(k, j);
+                        }
+                        res.setItem(i, j, sum);
                     }
                 }
             }
