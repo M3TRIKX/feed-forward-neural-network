@@ -91,7 +91,8 @@ public:
      * @param batchSize     Number of samples used for a single weight update
      */
     void fit(const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta = 0.1,
-             float lambda = 1e-6, uint8_t verboseLevel = 0, LRScheduler *sched = nullptr);
+             float lambda = 1e-6, uint8_t verboseLevel = 0, LRScheduler *sched = nullptr, size_t earlyStopping = 0,
+             long int maxTimeMs=0);
 
     /**
      * Predicts the data labels (should be ran on a trained network, otherwise it's just a random projection).

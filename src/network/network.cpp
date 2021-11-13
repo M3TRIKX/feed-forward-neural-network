@@ -92,10 +92,12 @@ void Network::weightDecay(float eta, float lambda, size_t batchSize, size_t epoc
     }
 }
 
-void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda, uint8_t verboseLevel, LRScheduler *sched) {
+void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda,
+        uint8_t verboseLevel, LRScheduler *sched, size_t earlyStopping, long int maxTimeMs) {
     if (eta < 0) {
         throw NegativeEtaException();
     }
+    auto startTime = std::chrono::high_resolution_clock::now();
 
     auto &train_X = trainValSplit.trainData;
     auto &train_y = trainValSplit.trainLabels;
@@ -109,6 +111,8 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     float ceSum = 0;
     size_t numBatches = trainBatches_X.size();
     size_t t = 0;
+    float currentBestCE = 10000;
+    size_t epochOfBestCE = 0;
 
     sched->setEta(eta);
 
@@ -131,17 +135,26 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             t += batchSize;
         }
 
-        if (verboseLevel >= 2) {
+        auto valLabels = validation_y.getMatrixCol(0);
+        auto predicted = predict(validation_X);
+        auto valStats = StatsPrinter::getStats(predicted, valLabels);
+
+        if (verboseLevel >= 3) {
             for (const auto &singleWeights : weights) {
                 WeightInfo::printWeightStats(singleWeights, true);
             }
         }
 
-        if (verboseLevel >= 1) {
-            auto valLabels = validation_y.getMatrixCol(0);
-            auto predicted = predict(validation_X);
-            auto valStats = StatsPrinter::getStats(predicted, valLabels);
+        if (verboseLevel >= 2) {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
+            std::cout << "Time taken by function: "
+                      << duration.count() << " microseconds" << std::endl;
+            std::cout << "ETA: " << eta << std::endl;
+        }
+
+        if (verboseLevel >= 1) {
             StatsPrinter::printProgressLine(accSum / static_cast<float>(numBatches),
                                             ceSum / static_cast<float>(numBatches),
                                             valStats.accuracy,
@@ -151,13 +164,25 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
 
             accSum = 0;
             ceSum = 0;
+        }
 
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        if (earlyStopping != 0){
+            if (valStats.crossEntropy < currentBestCE){
+                currentBestCE = valStats.crossEntropy;
+                epochOfBestCE = i;
+            }
+            if (i - epochOfBestCE == earlyStopping){
+                break;
+            }
+        }
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto currentDuration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
 
-            std::cout << "Time taken by function: "
-                      << duration.count() << " microseconds" << std::endl;
-            std::cout << "ETA: " << eta << std::endl;
+        if (maxTimeMs != 0 && currentDuration >= maxTimeMs){
+            if (verboseLevel >= 1){
+                std::cout << "Time exceeded" << std::endl;
+            }
+            break;
         }
     }
 }
