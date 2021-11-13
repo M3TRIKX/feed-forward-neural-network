@@ -83,9 +83,7 @@ void Network::weightDecay(float eta, float lambda, size_t batchSize, size_t epoc
         return;
     }
 
-//    float decayCoeff = 1.f - lambda * std::sqrt(batchSize) / std::sqrt(54000 * epoch);
     float decayCoeff = 1.f - lambda;
-//    float decayCoeff = 1 - eta * lambda / static_cast<float>(batchSize);
 
     for (auto &singleWeights : weights) {
         singleWeights *= decayCoeff;
@@ -104,6 +102,10 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     auto &validation_X = trainValSplit.validationData;
     auto &validation_y = trainValSplit.validationLabels;
 
+    // Copy train data
+    auto shuffledTrain_X = train_X;
+    auto shuffledTrain_y = train_y;
+
     auto trainBatches_X = Matrix<float>::generateBatches(train_X, batchSize);
     auto trainBatches_y = Matrix<unsigned int>::generateBatches(train_y, batchSize);
 
@@ -117,6 +119,15 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     sched->setEta(eta);
 
     for (size_t i = 0; i < numEpochs; ++i) {
+        // Reshuffle data
+        auto shuffledData = DataManager::randomShuffle(std::move(shuffledTrain_X), std::move(shuffledTrain_y));
+        shuffledTrain_X = std::move(shuffledData.data);
+        shuffledTrain_y = std::move(shuffledData.labels);
+
+        // Create new batches after reshuffling the data
+        trainBatches_X = Matrix<float>::generateBatches(shuffledTrain_X, batchSize);
+        trainBatches_y = Matrix<unsigned int>::generateBatches(shuffledTrain_y, batchSize);
+
         auto start = std::chrono::high_resolution_clock::now();
 
         for (size_t j = 0; j < numBatches; ++j) {
