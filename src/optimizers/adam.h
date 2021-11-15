@@ -67,8 +67,8 @@ public:
         }
 
         ++t;
-        beta1Power *= beta1Power;
-        beta2Power *= beta2Power;
+        beta1Power *= beta1;
+        beta2Power *= beta2;
     }
 
 };
