@@ -135,6 +135,23 @@ public:
         return res;
     }
 
+    static auto generateVectorBatches(const std::vector<ELEMENT_TYPE> &vec, size_t batchSize) {
+        auto currentIt = vec.begin();
+        size_t alreadyProcessed = 0;
+        size_t matRows = vec.size();
+
+        std::vector<std::vector<ELEMENT_TYPE>> res;
+
+        while (alreadyProcessed < vec.size()) {
+            auto minSize = std::min(matRows - alreadyProcessed, batchSize);
+            res.emplace_back(std::vector<ELEMENT_TYPE>(currentIt, currentIt + minSize));
+            alreadyProcessed += batchSize;
+            std::advance(currentIt, batchSize);
+        }
+
+        return res;
+    }
+
     /**
      * Prints matrix to standard output
      */
@@ -238,12 +255,26 @@ public:
         Matrix res(numCols, numRows);
 
         for (size_t i = 0; i < numRows; ++i) {
+#pragma omp simd
             for (size_t j = 0; j < numCols; ++j) {
                 res.matrix[j][i] = matrix[i][j];
             }
         }
 
         return res;
+    }
+
+    void transpose(Matrix &result) {
+        if (result.numRows != numCols || result.numCols != numRows) {
+            throw MatrixSizeException();
+        }
+
+        for (size_t i = 0; i < numRows; ++i) {
+#pragma omp simd
+            for (size_t j = 0; j < numCols; ++j) {
+                result.matrix[j][i] = matrix[i][j];
+            }
+        }
     }
 
     /**
@@ -522,63 +553,12 @@ private:
 
         Matrix res(numRowsToMultiply, rhs.numCols, 0);
 
-//        omp_set_num_threads(4);
-// #pragma omp parallel default(none) shared(numRowsToMultiply, rhs, res)
-        {
-// #pragma omp for
-            for (size_t i = 0; i < numRowsToMultiply; ++i) {
-                for (size_t k = 0; k < numCols; ++k) {
-                    float x = getItem(i, k);
+        for (size_t i = 0; i < numRowsToMultiply; ++i) {
+            for (size_t k = 0; k < numCols; ++k) {
+                float x = getItem(i, k);
 #pragma omp simd
-                    for (size_t j = 0; j < rhs.numCols; ++j) {
-                        res.matrix[i][j] += x * rhs.getItem(k, j);
-                    }
-                }
-            }
-        };
-// #pragma omp barrier
-
-        return res;
-    }
-
-    Matrix fasterBlockMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
-        if (numCols != rhs.numRows) {
-            throw MatrixSizeException();
-        }
-
-        Matrix res(numRowsToMultiply, rhs.numCols, 0);
-
-//        const int B = 5;
-//
-//        for (int ii = 0; ii < numRows; ii += B) {
-//            for (int jj = 0; jj < numRows; jj += B) {
-//                for (int kk = 0; kk < numRows; kk += B) {
-//                    for (int i = ii; i < ii + B; ++i) {
-//                        for (int j = jj; j < jj + B; ++j) {
-//                            float temp = 0;
-//                            for (int k = kk; k < kk + B; ++k) {
-//                                temp += getItem(i, k) * rhs.getItem(k, j);
-//                            }
-//
-//                            res.matrix[i][j] += temp;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-        const int bsize = 32;
-        int en = bsize * (numRows / bsize);
-        for (int kk = 0; kk < en; kk += bsize) {
-            for (int jj = 0; jj < en; jj += bsize) {
-                for (int i = 0; i < numRows; ++i) {
-                    for (int j = jj; j < jj + bsize; ++j) {
-                        float sum = res.matrix[i][j];
-                        for (int k = kk; k < kk + bsize; ++k) {
-                            sum += getItem(i, k) * rhs.getItem(k, j);
-                        }
-                        res.setItem(i, j, sum);
-                    }
+                for (size_t j = 0; j < rhs.numCols; ++j) {
+                    res.matrix[i][j] += x * rhs.getItem(k, j);
                 }
             }
         }

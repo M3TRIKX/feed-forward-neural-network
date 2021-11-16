@@ -13,6 +13,7 @@
 class Optimizer{
 protected:
     std::vector<Matrix<float>> *weights = NULL;
+    std::vector<Matrix<float>> *weightsTransposed = NULL;
     std::vector<std::vector<float>> *biases = NULL;
 
 public:
@@ -28,8 +29,9 @@ public:
      * @param weights - Network weights
      * @param biases - Network biases
      */
-    void setMatrices(std::vector<Matrix<float>> &weights, std::vector<std::vector<float>> &biases) {
+    void setMatrices(std::vector<Matrix<float>> &weights, std::vector<Matrix<float>> &weightsTransposed, std::vector<std::vector<float>> &biases) {
         this->weights = &weights;
+        this->weightsTransposed = &weightsTransposed;
         this->biases = &biases;
     }
 

@@ -28,10 +28,12 @@ class Network {
     const Config &networkConfig;
     Optimizer *optimizer;
     std::vector<Matrix<ELEMENT_TYPE>> weights;
+    std::vector<Matrix<ELEMENT_TYPE>> weightsTransposed;
     std::vector<std::vector<ELEMENT_TYPE>> biases;
 
     std::vector<Matrix<ELEMENT_TYPE>> activationDerivResults;
     std::vector<Matrix<ELEMENT_TYPE>> activationResults;
+    std::vector<Matrix<ELEMENT_TYPE>> activationIntermediateResults;
 
     std::vector<Matrix<ELEMENT_TYPE>> deltaWeights;
     std::vector<std::vector<ELEMENT_TYPE>> deltaBiases;
@@ -72,6 +74,8 @@ public:
                 weights.push_back(Matrix<float>::generateRandomMatrix(layer.numNeurons, nextLayer.numNeurons, -1, 1));
             }
 
+            weightsTransposed.push_back(weights[i].transpose());
+
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
             deltaBiases.emplace_back(nextLayer.numNeurons, 0);
@@ -79,7 +83,7 @@ public:
             deltaWeights.emplace_back(0, 0, 0);
         }
 
-        optimizer->setMatrices(weights, biases);
+        optimizer->setMatrices(weights, weightsTransposed, biases);
         optimizer->init();
     }
 

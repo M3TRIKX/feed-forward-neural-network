@@ -20,6 +20,7 @@ class WrongInputMatricesException : public std::exception{};
 struct DataLabelsShuffle_t {
     Matrix<float> data;
     Matrix<unsigned int> labels;
+    std::vector<unsigned int> vectorLabels;
 };
 
 struct TrainValSplit_t {
@@ -27,9 +28,9 @@ struct TrainValSplit_t {
     using label_type = unsigned int;
 
     Matrix<elem_type> trainData;
-    Matrix<label_type> trainLabels;
+    std::vector<label_type> trainLabels;
     Matrix<elem_type> validationData;
-    Matrix<label_type> validationLabels;
+    std::vector<label_type> validationLabels;
 };
 
 class DataManager {
@@ -47,7 +48,7 @@ public:
      *                          (the validation one will contain the rest).
      * @return Split dataset
      */
-    static TrainValSplit_t trainValidateSplit(const Matrix<elem_type> &dataMatrix, const Matrix<unsigned int> &labelsMatrix, size_t numOfTrainSamples);
+    static TrainValSplit_t trainValidateSplit(const Matrix<elem_type> &dataMatrix, const std::vector<unsigned int> &labelsVector, size_t numOfTrainSamples);
 
     /**
      * Shuffles the data and the labels randomly (both the same way).
@@ -57,6 +58,7 @@ public:
      * @return Shuffled matrices.
      */
     static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, Matrix<unsigned int> &&labelsMatrix);
+    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, std::vector<unsigned int> &&labelsMatrix);
 };
 
 

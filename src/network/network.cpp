@@ -60,8 +60,9 @@ void Network::backProp(const std::vector<unsigned int> &labels) {
     auto *lastDelta = &(deltaWeights[numLayers - 2]);
 
     for (int i = static_cast<int>(numLayers) - 2; i > 0; --i) {
-        auto matmuls = lastDelta->matmul(weights[i].transpose());
-        deltaWeights[i - 1] = matmuls * activationDerivResults[i - 1];
+        auto matmuls = lastDelta->matmul(weightsTransposed[i]);
+        matmuls *= activationDerivResults[i - 1];
+        deltaWeights[i - 1] = matmuls;
         lastDelta = &(deltaWeights[i - 1]);
     }
 
@@ -107,7 +108,7 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     auto shuffledTrain_y = train_y;
 
     auto trainBatches_X = Matrix<float>::generateBatches(train_X, batchSize);
-    auto trainBatches_y = Matrix<unsigned int>::generateBatches(train_y, batchSize);
+    auto trainBatches_y = Matrix<unsigned int>::generateVectorBatches(train_y, batchSize);
 
     float accSum = 0;
     float ceSum = 0;
@@ -118,15 +119,17 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
 
     sched->setEta(eta);
 
+//    std::vector<unsigned int> labels(batchSize, 0);
+
     for (size_t i = 0; i < numEpochs; ++i) {
         // Reshuffle data
         auto shuffledData = DataManager::randomShuffle(std::move(shuffledTrain_X), std::move(shuffledTrain_y));
         shuffledTrain_X = std::move(shuffledData.data);
-        shuffledTrain_y = std::move(shuffledData.labels);
+        shuffledTrain_y = std::move(shuffledData.vectorLabels);
 
         // Create new batches after reshuffling the data
         trainBatches_X = Matrix<float>::generateBatches(shuffledTrain_X, batchSize);
-        trainBatches_y = Matrix<unsigned int>::generateBatches(shuffledTrain_y, batchSize);
+        trainBatches_y = Matrix<unsigned int>::generateVectorBatches(shuffledTrain_y, batchSize);
 
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -134,35 +137,26 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             eta = sched->exponential(t);
 
             // ToDo: Optimise
-            auto labels = trainBatches_y[j].getMatrixCol(0);
-            auto stats = forwardPass(trainBatches_X[j], labels);
+//            auto labels = trainBatches_y[j].getMatrixCol(0);
+            auto stats = forwardPass(trainBatches_X[j], trainBatches_y[j]);
             accSum += stats.accuracy;
             ceSum += stats.crossEntropy;
 
-            backProp(labels);
+            backProp(trainBatches_y[j]);
             weightDecay(eta, lambda, batchSize, i + 1);
             updateWeights(batchSize, eta);
 
             t += batchSize;
         }
 
-        auto valLabels = validation_y.getMatrixCol(0);
+//        auto valLabels = validation_y;
         auto predicted = predict(validation_X);
-        auto valStats = StatsPrinter::getStats(predicted, valLabels);
+        auto valStats = StatsPrinter::getStats(predicted, validation_y);
 
         if (verboseLevel >= 3) {
             for (const auto &singleWeights : weights) {
                 WeightInfo::printWeightStats(singleWeights, true);
             }
-        }
-
-        if (verboseLevel >= 2) {
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
-            std::cout << "Time taken by function: "
-                      << duration.count() << " microseconds" << std::endl;
-            std::cout << "ETA: " << eta << std::endl;
         }
 
         if (verboseLevel >= 1) {
@@ -175,6 +169,15 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
 
             accSum = 0;
             ceSum = 0;
+        }
+
+        if (verboseLevel >= 2) {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+            std::cout << "Time taken by function: "
+                      << duration.count() << " microseconds" << std::endl;
+            std::cout << "ETA: " << eta << std::endl;
         }
 
         if (earlyStopping != 0){
