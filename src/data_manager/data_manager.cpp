@@ -80,9 +80,9 @@ DataLabelsShuffle_t DataManager::randomShuffle(Matrix<elem_type> &&dataMatrix, s
         labels[i] = labelsMatrix[j];
         ++i;
     }
+    DataLabelsShuffle_t result;
+    result.data = Matrix<elem_type>(std::move(data));
+    result.vectorLabels = labels;
 
-    return {
-            .data=Matrix<elem_type>(std::move(data)),
-            .vectorLabels=labels,
-    };
+    return result;
 }
