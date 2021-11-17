@@ -292,6 +292,16 @@ public:
         }
     }
 
+    template<typename F>
+    void applyFunction(F f, size_t startRow, size_t computeNRows) {
+        for (size_t i = startRow; i < startRow + computeNRows; ++i) {
+#pragma omp simd
+            for (size_t j = 0; j < getNumCols(); ++j) {
+                matrix[i][j] = f(matrix[i][j]);
+            }
+        }
+    }
+
     // Arithmetic operators
 
     /**
@@ -495,6 +505,14 @@ public:
             }
         }
         return lhs;
+    }
+
+    friend bool operator==(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
+        return lhs.matrix == rhs.matrix;
+    }
+
+    friend bool operator!=(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
+        return lhs.matrix != rhs.matrix;
     }
 
     /**

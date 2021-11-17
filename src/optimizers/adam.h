@@ -45,6 +45,7 @@ public:
 //            size_t batchSize, float eta) override {
 //        float batchEta = eta / static_cast<float>(batchSize);
 //
+//#pragma omp parallel for num_threads(3) default(none) shared(deltaWeights, deltaBiases, activationResults, batchEta)
 //        for (size_t layer = 0; layer < weights->size(); ++layer) {
 //            // Update weights
 //            auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
@@ -64,7 +65,10 @@ public:
 //                auto vb_corr = vb[layer][j] / (1 - beta2Power);
 //                (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
 //            }
+//
+//            (*weights)[layer].transpose((*weightsTransposed)[layer]);
 //        }
+//#pragma omp barrier
 //
 //        ++t;
 //        beta1Power *= beta1;
@@ -75,11 +79,12 @@ public:
                 size_t batchSize, float eta) override {
         float batchEta = eta / static_cast<float>(batchSize);
 
+#pragma omp parallel for default(none) shared(deltaWeights, deltaBiases, activationResults, batchEta)
         for (size_t layer = 0; layer < weights->size(); ++layer) {
             auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
-            for (size_t i = 0; i < (*weights)[layer].getNumRows(); ++i){
+            for (size_t i = 0; i < (*weights)[layer].getNumRows(); ++i) {
 #pragma omp simd
-                for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j){
+                for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j) {
                     mw[layer].setItem(i, j, beta1 * mw[layer].getItem(i, j) + (1 - beta1) * weightDelta.getItem(i, j));
                     vw[layer].setItem(i, j, beta2 * vw[layer].getItem(i, j) + (1 - beta2) * std::pow(weightDelta.getItem(i, j), 2));
 
@@ -87,20 +92,24 @@ public:
                     auto vw_corr = vw[layer].getItem(i, j) / (1 - beta2Power);
 
                     (*weights)[layer].setItem(i, j, (*weights)[layer].getItem(i, j) - batchEta * (mw_corr / (std::sqrt(vw_corr) + eps)));
-
-                    if(i == 0){
-                        mb[layer][j] = beta1 * mb[layer][j] + (1 - beta1) * deltaBiases[layer][j];
-                        vb[layer][j] = beta2 * vb[layer][j] + (1 - beta2) * std::pow(deltaBiases[layer][j], 2);
-                        auto mb_corr = mb[layer][j] / (1 - beta1Power);
-                        auto vb_corr = vb[layer][j] / (1 - beta2Power);
-                        (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
-                    }
                 }
+            }
+
+#pragma omp simd
+            for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j) {
+                mb[layer][j] = beta1 * mb[layer][j] + (1 - beta1) * deltaBiases[layer][j];
+                vb[layer][j] = beta2 * vb[layer][j] + (1 - beta2) * std::pow(deltaBiases[layer][j], 2);
+                auto mb_corr = mb[layer][j] / (1 - beta1Power);
+                auto vb_corr = vb[layer][j] / (1 - beta2Power);
+                (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
             }
 
 //            (*weightsTransposed)[layer] = (*weights)[layer].transpose();
             (*weights)[layer].transpose((*weightsTransposed)[layer]);
         }
+
+#pragma omp barrier
+
         t += 1;
         beta1Power *= beta1;
         beta2Power *= beta2;
