@@ -4,10 +4,14 @@
 
 #ifndef FEEDFORWARDNEURALNET_RELU_H
 #define FEEDFORWARDNEURALNET_RELU_H
-#include "template.h"
-#include <math.h>
-#include <algorithm>
 
+#include "template.h"
+#include <algorithm>
+#include <math.h>
+
+/**
+ * ReLU activation function
+ */
 class ReLU: public ActivationFunctionTemplate {
 public:
     static void normal(Matrix<type> &matrix) {

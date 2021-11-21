@@ -5,6 +5,9 @@
 #ifndef FEEDFORWARDNEURALNET_FUNCTIONS_ENUM_H
 #define FEEDFORWARDNEURALNET_FUNCTIONS_ENUM_H
 
+/**
+ * Implemented activation functions
+ */
 enum ActivationFunction {
     Identity,
     Sigmoid,

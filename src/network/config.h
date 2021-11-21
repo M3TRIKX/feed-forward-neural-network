@@ -5,17 +5,20 @@
 #ifndef FEEDFORWARDNEURALNET_CONFIG_H
 #define FEEDFORWARDNEURALNET_CONFIG_H
 
-#include <cstdlib>
-#include <memory>
-#include <utility>
-#include <vector>
-#include <functional>
 #include "../activation_functions/functions_enum.h"
 #include "../activation_functions/fast_sigmoid.h"
 #include "../activation_functions/relu.h"
 #include "../activation_functions/sigmoid.h"
 #include "../activation_functions/softmax.h"
+#include <cstdlib>
+#include <memory>
+#include <utility>
+#include <vector>
+#include <functional>
 
+/**
+ * Layer configuration
+ */
 struct LayerConfig {
     using ELEMENT_TYPE = float;
     using ActivationFunction_t = std::function<void(Matrix<ELEMENT_TYPE> &)>;
@@ -34,6 +37,9 @@ struct LayerConfig {
 
 class WrongActivationFunction : public std::exception {};
 
+/**
+ * Network configuration
+ */
 class Config {
     using ELEMENT_TYPE = float;
     using ActivationFunction_t = std::function<void(Matrix<ELEMENT_TYPE> &)>;
@@ -41,6 +47,12 @@ class Config {
     std::vector<LayerConfig> layersConfig;
 
 public:
+    /**
+     * Adds layer to network
+     * @param nNeurons - number of neurons in layer
+     * @param activationFunction - activation function of layer
+     * @return configuration
+     */
     Config &addLayer(size_t nNeurons, ActivationFunction activationFunction = ActivationFunction::Identity);
 
 private:

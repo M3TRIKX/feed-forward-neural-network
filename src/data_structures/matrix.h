@@ -86,6 +86,14 @@ public:
         return res;
     }
 
+    /**
+     * Generates matrix with random values from uniform distribution
+     * @param rows - amount of rows
+     * @param cols - amount of columns
+     * @param min - lower bound
+     * @param max - upper bound
+     * @return generated matrix
+     */
     static Matrix<ELEMENT_TYPE> generateRandomUniformMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
         Matrix res(rows, cols);
         std::random_device rd;
@@ -118,6 +126,12 @@ public:
         return res;
     }
 
+    /**
+     * Divides a matrix into batch-sized matrices
+     * @param mat - source matrix
+     * @param batchSize - batch size
+     * @return batch-sized matrices
+     */
     static auto generateBatches(const Matrix<ELEMENT_TYPE> &mat, size_t batchSize) {
         auto currentIt = mat.matrix.begin();
         size_t alreadyProcessed = 0;
@@ -135,6 +149,12 @@ public:
         return res;
     }
 
+    /**
+     * Generates batch-sized vectors from source vector
+     * @param vec - source vector
+     * @param batchSize - batch size
+     * @return batch-sized vectors
+     */
     static auto generateVectorBatches(const std::vector<ELEMENT_TYPE> &vec, size_t batchSize) {
         auto currentIt = vec.begin();
         size_t alreadyProcessed = 0;
@@ -160,7 +180,6 @@ public:
             for (size_t j = 0; j < numCols; j++) {
                 std::cout << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << getItem(i,j) << " ";
             }
-
             std::cout << std::endl;
         }
     }
@@ -236,8 +255,8 @@ public:
     /**
      * Matrix multiplication with additional feature of multiplying a part of the first matrix
      * with the whole second matrix m2.
-     * @param m2 Matrix we are multiplying *this with
-     * @param numRows Number of rows from *this matrix we want to use for multiplication
+     * @param m2 - Matrix we are multiplying *this with
+     * @param numRowsToMultiply - Number of rows from *this matrix we want to use for multiplication
      * @return multiplied matrices
      */
     Matrix matmul(const Matrix &m2, int numRowsToMultiply = -1) const {
@@ -264,6 +283,10 @@ public:
         return res;
     }
 
+    /**
+     * Transposes matrix in place
+     * @param result matrix to transpose
+     */
     void transpose(Matrix &result) {
         if (result.numRows != numCols || result.numCols != numRows) {
             throw MatrixSizeException();
@@ -292,6 +315,13 @@ public:
         }
     }
 
+    /**
+     * Applies given function to a specified part of matrix
+     * @tparam F - function return type
+     * @param f - function
+     * @param startRow - start row
+     * @param computeNRows - to how many rows we should apply the function
+     */
     template<typename F>
     void applyFunction(F f, size_t startRow, size_t computeNRows) {
         for (size_t i = startRow; i < startRow + computeNRows; ++i) {
@@ -499,7 +529,7 @@ public:
      */
     friend auto operator/(Matrix<ELEMENT_TYPE> lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         for (size_t i = 0; i < lhs.numRows; ++i) {
-            // #pragma omp simd
+            #pragma omp simd
             for (size_t j = 0; j < lhs.numCols; ++j) {
                 lhs.setItem(i, j, lhs.getItem(i,j) / rhs.getItem(i,j));
             }
@@ -507,10 +537,22 @@ public:
         return lhs;
     }
 
+    /**
+     * Checks whether two matrices are equal
+     * @param lhs - first matrix
+     * @param rhs - second matrix
+     * @return true if the matrices are equal
+     */
     friend bool operator==(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         return lhs.matrix == rhs.matrix;
     }
 
+    /**
+     * Checks whether two matrices are different
+     * @param lhs - first matrix
+     * @param rhs - second matrix
+     * @return true if the matrices are not equal
+     */
     friend bool operator!=(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         return lhs.matrix != rhs.matrix;
     }
@@ -518,7 +560,7 @@ public:
     /**
      * Applies power of x to each element
      * @param x - power
-     * @return Chenged matrix
+     * @return Changed matrix
      */
     auto pow(size_t x){
         applyFunction([x](ELEMENT_TYPE k) {return (std::pow(k,x));});
@@ -544,6 +586,7 @@ private:
     /**
      * Computes matrix multiplication in a dummy way
      * @param rhs - a matrix we are multiplying with
+     * @param numRowsToMultiply - how many rows to multiply
      * @return *this "matmul" rhs
      */
     Matrix slowMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
@@ -564,6 +607,12 @@ private:
         return res;
     }
 
+    /**
+     * Computes matrix multiplication
+     * @param rhs - matrix to multiply by
+     * @param numRowsToMultiply - how many rows to multiply
+     * @return multiplied matrix
+     */
     Matrix fasterSlowMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
         if (numCols != rhs.numRows) {
             throw MatrixSizeException();

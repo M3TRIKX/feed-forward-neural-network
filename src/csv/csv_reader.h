@@ -5,18 +5,19 @@
 #ifndef FEEDFORWARDNEURALNET_CSV_READER_H
 #define FEEDFORWARDNEURALNET_CSV_READER_H
 
+#include "../data_structures/matrix.h"
+#include <algorithm>
+#include <cstring>
+#include <errno.h>
+#include <fcntl.h>
 #include <iostream>
 #include <sstream>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <vector>
-#include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include "../data_structures/matrix.h"
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
 class CsvReadError: std::exception {};
 

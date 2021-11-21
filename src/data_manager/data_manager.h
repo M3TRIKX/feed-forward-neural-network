@@ -5,13 +5,12 @@
 #ifndef FEEDFORWARDNEURALNET_DATA_MANAGER_H
 #define FEEDFORWARDNEURALNET_DATA_MANAGER_H
 
-
+#include "../data_structures/matrix.h"
+#include <algorithm>
 #include <cstdlib>
-#include <vector>
 #include <exception>
 #include <random>
-#include <algorithm>
-#include "../data_structures/matrix.h"
+#include <vector>
 
 class TrainingSetNotLargeEnoughException : public std::exception{};
 class WrongSplitBatchesException : public std::exception{};

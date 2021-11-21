@@ -26,7 +26,7 @@ public:
      * Returns stats of given matrix
      * @param predicted - matrix predicted by NN
      * @param expected - expected labels
-     * @return stats as a hashmap
+     * @return stats as a map
      */
     static Stats getStats(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
         float accuracy = AccuracyFunction::accuracy(ArgmaxFunction::argmax(predicted), expected);
@@ -52,14 +52,31 @@ public:
                           totalEpochs);
     }
 
+    /**
+     * Prints progress line from given values
+     * @param avgTrainAcc - average train accuracy
+     * @param avgTrainCE - average train cross-entropy
+     * @param valPredicted - predicted values
+     * @param valExpected - expected values
+     * @param epoch - current epoch
+     * @param totalEpochs - total epochs
+     */
     static void printProgressLine(float avgTrainAcc, float avgTrainCE, const Matrix<float> &valPredicted,
                                   const std::vector<unsigned int> &valExpected, size_t epoch, size_t totalEpochs) {
         auto valStats = getStats(valPredicted, valExpected);
         printProgressLine(avgTrainAcc, avgTrainCE, valStats.accuracy, valStats.crossEntropy, epoch, totalEpochs);
     }
 
-    static void
-    printProgressLine(float trainAcc, float trainCE, float valAcc, float valCE, size_t epoch, size_t totalEpochs) {
+    /**
+     * Prints progress line from given values
+     * @param trainAcc - average train accuracy
+     * @param trainCE - average train cross-entropy
+     * @param valAcc - validation set accuracy
+     * @param valCE - validation set cross-entropy
+     * @param epoch - current epoch
+     * @param totalEpochs - total epochs
+     */
+    static void printProgressLine(float trainAcc, float trainCE, float valAcc, float valCE, size_t epoch, size_t totalEpochs) {
         std::cout << "Epoch: " << epoch << "/" << totalEpochs;
         std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainAcc;
         std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainCE;

@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <cstddef>
 
+/**
+ * Class representing LRScheduler
+ */
 class LRScheduler {
     float currentEta;
     float minEta;
@@ -28,6 +31,10 @@ public:
     LRScheduler(float minEta, float decayRate, unsigned int stepsDecay)
             : currentEta(1e-3), minEta(minEta), decayRate(decayRate), stepsDecay(stepsDecay) {}
 
+    /**
+     * Sets eta
+     * @param eta - eta to set
+     */
     void setEta(float eta) { currentEta = eta; }
 
     /**

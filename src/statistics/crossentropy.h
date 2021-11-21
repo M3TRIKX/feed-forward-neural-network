@@ -14,6 +14,12 @@
 class CrossentropyFunction {
     constexpr static float zeroCorrection = 1e-15;
 public:
+    /**
+     * Calculates cross-entropy of predictions
+     * @param predicted - matrix of predictions
+     * @param expected - expected labels
+     * @return cross-entropy
+     */
     auto static crossentropy(const Matrix<float> &predicted, const std::vector<unsigned int> &expected){
         float crossEntropyRes = 0;
 

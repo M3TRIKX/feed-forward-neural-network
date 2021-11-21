@@ -28,6 +28,7 @@ public:
      * Sets weights and biases to optimizer
      * @param weights - Network weights
      * @param biases - Network biases
+     * @param weightsTransposed - Transposed weights
      */
     void setMatrices(std::vector<Matrix<float>> &weights, std::vector<Matrix<float>> &weightsTransposed, std::vector<std::vector<float>> &biases) {
         this->weights = &weights;

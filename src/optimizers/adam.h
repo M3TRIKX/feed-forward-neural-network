@@ -5,10 +5,10 @@
 #ifndef FEEDFORWARDNEURALNET_ADAM_H
 #define FEEDFORWARDNEURALNET_ADAM_H
 
-#include <cmath>
 #include "../data_structures/matrix.h"
 #include "../network/config.h"
 #include "optimizer_template.h"
+#include <cmath>
 
 /**
  * Class representing Adam optimizer
@@ -27,6 +27,11 @@ class AdamOptimizer : public Optimizer{
     std::vector<std::vector<float>> vb;
 
 public:
+    /**
+     * Creates Adam optimizer with it|s parameters
+     * @param beta1 - exponential decay rate for the first moment estimates
+     * @param beta2 - exponential decay rate for the second-moment estimates
+     */
     AdamOptimizer(float beta1 = 0.9, float beta2 = 0.999)
         : beta1(beta1), beta2(beta2), beta1Power(beta1), beta2Power(beta2), t(1) {}
 

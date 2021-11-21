@@ -5,11 +5,11 @@
 #ifndef FEEDFORWARDNEURALNET_CSV_WRITER_H
 #define FEEDFORWARDNEURALNET_CSV_WRITER_H
 
+#include "../data_structures/matrix.h"
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <fstream>
-#include "../data_structures/matrix.h"
 
 class CsvWriteError: std::exception {};
 
