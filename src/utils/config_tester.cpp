@@ -83,16 +83,15 @@ void ConfigTester::testConfigs(std::vector<Configuration> &configurations, size_
             losses.push_back(testStats.crossEntropy);
             accuracies.push_back(testStats.accuracy);
 
-            auto [minTime, maxTime, avgTime] = getStats(times);
-            auto [minAcc, maxAcc, avgAcc] = getStats(accuracies);
-            auto [minLoss, maxLoss, avgLoss] = getStats(losses);
-
-            sorted_map.insert(std::make_pair(avgAcc, configText));
-
             if (printProgress){
                 std::cout << "Accuracy: " << testStats.accuracy << " Crossentropy: " << testStats.crossEntropy << " Run-time: " << convertToMinSecText(runTimeMin) << std::endl;
             }
         }
+        auto [minTime, maxTime, avgTime] = getStats(times);
+        auto [minAcc, maxAcc, avgAcc] = getStats(accuracies);
+        auto [minLoss, maxLoss, avgLoss] = getStats(losses);
+
+        sorted_map.insert(std::make_pair(avgAcc, configText));
         printConfigResults(accuracies, losses, times);
     }
 
