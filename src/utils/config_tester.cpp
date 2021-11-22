@@ -55,9 +55,9 @@ void ConfigTester::testConfigs(std::vector<Configuration> &configurations, size_
         printConfigInfo(config, runsPerConfig);
 
         auto [firstLayerSize, secondLayerSize, batchSize, eta, lambda, decayRate, stepsDecay, minEta, earlyStopping, timeMsLimit, maxEpochs] = config.getConfigTuple();
+        std::string configText = "784x" + std::to_string(firstLayerSize) + "x" + std::to_string(secondLayerSize) + "x10";
 
         for (size_t i = 0; i < runsPerConfig; i++){
-            std::string configText = "784x" + std::to_string(firstLayerSize) + "x" + std::to_string(secondLayerSize) + "x10";
             if (printProgress){
                 printProgressLine(i, runsPerConfig, "Testing configuration " + configText + "... ");
             }
