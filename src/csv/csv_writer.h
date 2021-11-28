@@ -16,7 +16,6 @@ class CsvWriteError: std::exception {};
 template<typename T>
 class CsvWriter {
 public:
-    // ToDo: Error handling...
     static void writeCsv(const char *path, const Matrix<T> &matrix) {
         // Create CSV content in-memory
         std::string csvContent;

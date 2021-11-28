@@ -72,7 +72,7 @@ void ConfigTester::testConfigs(std::vector<Configuration> &configurations, size_
             LRScheduler sched(minEta, decayRate, stepsDecay);
 
             auto startTime = std::chrono::high_resolution_clock::now();
-            network.parallelFit(data, maxEpochs, batchSize, eta,  lambda, verbose, &sched, earlyStopping, timeMsLimit);
+            network.fit(data, maxEpochs, batchSize, eta, lambda, verbose, &sched, earlyStopping, timeMsLimit);
             auto endTime = std::chrono::high_resolution_clock::now();
             float runTimeMin = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() / 60000.0;
 

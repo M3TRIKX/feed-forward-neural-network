@@ -1,7 +1,3 @@
-//
-// Created by dominik on 22. 10. 2021.
-//
-
 #include "config.h"
 
 Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunction) {
@@ -20,7 +16,7 @@ Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunctio
 
         case Sigmoid:
             fn = Sigmoid::normal;
-//            fnDeriv = Sigmoid::derivative;
+            fnDeriv = Sigmoid::derivative;
             break;
 
         case FastSigmoid:
@@ -29,6 +25,8 @@ Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunctio
             break;
 
         case SoftMax:
+            // We use SoftMax with CrossEntropy.
+            // The derivative
             fn = SoftMax::normal;
             break;
 

@@ -46,47 +46,15 @@ public:
         }
     }
 
-//    void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, std::vector<std::vector<float>> &deltaBiases,
-//            size_t batchSize, float eta) override {
-//        float batchEta = eta / static_cast<float>(batchSize);
-//
-//#pragma omp parallel for num_threads(3) default(none) shared(deltaWeights, deltaBiases, activationResults, batchEta)
-//        for (size_t layer = 0; layer < weights->size(); ++layer) {
-//            // Update weights
-//            auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
-//            mw[layer] *= beta1;
-//            mw[layer] += weightDelta * (1 - beta1);
-//            vw[layer] *= beta2;
-//            vw[layer] += weightDelta.pow(2) * (1 - beta2);
-//            auto mw_corr = mw[layer] / (1 - beta1Power);
-//            auto vw_corr = vw[layer] / (1 - beta2Power);
-//            (*weights)[layer] -= (mw_corr / (vw_corr.sqrt() + eps)) * batchEta;
-//
-//            // Update biases
-//            for (int j = 0; j < (*weights)[layer].getNumCols(); j++){
-//                mb[layer][j] = beta1 * mb[layer][j] + (1 - beta1) * deltaBiases[layer][j];
-//                vb[layer][j] = beta2 * vb[layer][j] + (1 - beta2) * std::pow(deltaBiases[layer][j], 2);
-//                auto mb_corr = mb[layer][j] / (1 - beta1Power);
-//                auto vb_corr = vb[layer][j] / (1 - beta2Power);
-//                (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
-//            }
-//
-//            (*weights)[layer].transpose((*weightsTransposed)[layer]);
-//        }
-//#pragma omp barrier
-//
-//        ++t;
-//        beta1Power *= beta1;
-//        beta2Power *= beta2;
-//    }
-
     void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, std::vector<std::vector<float>> &deltaBiases,
                 size_t batchSize, float eta) override {
         float batchEta = eta / static_cast<float>(batchSize);
 
 #pragma omp parallel for default(none) shared(deltaWeights, deltaBiases, activationResults, batchEta)
         for (size_t layer = 0; layer < weights->size(); ++layer) {
-            auto weightDelta = activationResults[layer].transpose().matmul(deltaWeights[layer]);
+            auto weightDelta = activationResults[layer].transpose();
+            weightDelta = weightDelta.matmul(deltaWeights[layer]);
+
             for (size_t i = 0; i < (*weights)[layer].getNumRows(); ++i) {
 #pragma omp simd
                 for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j) {
@@ -109,11 +77,10 @@ public:
                 (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
             }
 
-//            (*weightsTransposed)[layer] = (*weights)[layer].transpose();
             (*weights)[layer].transpose((*weightsTransposed)[layer]);
         }
 
-#pragma omp barrier
+// #pragma omp barrier
 
         t += 1;
         beta1Power *= beta1;

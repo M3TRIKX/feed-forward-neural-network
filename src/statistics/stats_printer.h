@@ -7,7 +7,6 @@
 
 #include "./accuracy.h"
 #include "./crossentropy.h"
-#include "./argmax.h"
 
 struct Stats {
     float accuracy = 0;
@@ -29,7 +28,7 @@ public:
      * @return stats as a map
      */
     static Stats getStats(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
-        float accuracy = AccuracyFunction::accuracy(ArgmaxFunction::argmax(predicted), expected);
+        float accuracy = AccuracyFunction::accuracy(argmax(predicted), expected);
         float crossentropy = CrossentropyFunction::crossentropy(predicted, expected);
         return {.accuracy=accuracy, .crossEntropy=crossentropy};
     }
@@ -43,9 +42,10 @@ public:
      * @param epoch - current epoch
      * @param totalEpochs - total amount of epochs
      */
-    static void printProgressLine(const Matrix<float> &trainOutput, const std::vector<unsigned int> &trainExpectedLabels,
-                                  const Matrix<float> &valOutput, const std::vector<unsigned int> &valExpectedLabels,
-                                  size_t epoch, size_t totalEpochs) {
+    static void
+    printProgressLine(const Matrix<float> &trainOutput, const std::vector<unsigned int> &trainExpectedLabels,
+                      const Matrix<float> &valOutput, const std::vector<unsigned int> &valExpectedLabels,
+                      size_t epoch, size_t totalEpochs) {
         auto trainStats = getStats(trainOutput, trainExpectedLabels);
         auto valStats = getStats(valOutput, valExpectedLabels);
         printProgressLine(trainStats.accuracy, trainStats.crossEntropy, valStats.accuracy, valStats.crossEntropy, epoch,
@@ -76,12 +76,33 @@ public:
      * @param epoch - current epoch
      * @param totalEpochs - total epochs
      */
-    static void printProgressLine(float trainAcc, float trainCE, float valAcc, float valCE, size_t epoch, size_t totalEpochs) {
+    static void
+    printProgressLine(float trainAcc, float trainCE, float valAcc, float valCE, size_t epoch, size_t totalEpochs) {
         std::cout << "Epoch: " << epoch << "/" << totalEpochs;
         std::cout << "    Accuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainAcc;
         std::cout << "%    Loss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << trainCE;
         std::cout << "    ValAccuracy: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valAcc;
         std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valCE << std::endl;
+    }
+
+private:
+    /**
+     * Function calculating argmax or each row in the matrix
+     * @param matrix - matrix to compute argmax on
+     * @return - vector of classes
+     */
+    static std::vector<unsigned int> argmax(const Matrix<float> &matrix) {
+        auto classes = std::vector<unsigned int>(matrix.getNumRows());
+        for (size_t i = 0; i < matrix.getNumRows(); i++) {
+            float currentMax = 0;
+            for (size_t j = 0; j < matrix.getNumCols(); j++) {
+                if (matrix.getItem(i, j) > currentMax) {
+                    currentMax = matrix.getItem(i, j);
+                    classes[i] = j;
+                }
+            }
+        }
+        return classes;
     }
 };
 

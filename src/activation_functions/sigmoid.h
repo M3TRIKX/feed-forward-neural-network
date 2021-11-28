@@ -1,7 +1,3 @@
-//
-// Created by Dominik Klement on 12/10/2021.
-//
-
 #ifndef FEEDFORWARDNEURALNET_SIGMOID_H
 #define FEEDFORWARDNEURALNET_SIGMOID_H
 
@@ -15,12 +11,14 @@ public:
             return 1 / (1 + exp(-x));
         };
         matrix.applyFunction(fn);
-//        return 1 / (1 + exp(-x));
     }
 
-    static type derivative(type x) {
-        type n = 1 / (1 + exp(-x));
-        return n * (1 - n);
+    static void derivative(Matrix<type> &matrix) {
+        auto fn = [](type x) {
+            type y = 1 / (1 + exp(-x));
+            return y * (1 - y);
+        };
+        matrix.applyFunction(fn);
     }
 };
 

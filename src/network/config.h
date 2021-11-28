@@ -1,7 +1,3 @@
-//
-// Created by dominik on 22. 10. 2021.
-//
-
 #ifndef FEEDFORWARDNEURALNET_CONFIG_H
 #define FEEDFORWARDNEURALNET_CONFIG_H
 

@@ -67,26 +67,6 @@ public:
     }
 
     /**
-     * Generates a randomly initialized matrix
-     * @param cols - num of matrix rows
-     * @param rows - num of matrix cols
-     * @param min - random min bound
-     * @param max - random max bound
-     * @return randomly initialized matrix
-     */
-    static Matrix<ELEMENT_TYPE> generateRandomMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
-        Matrix res(rows, cols);
-
-        for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = 0; j < cols; ++j) {
-                res.matrix[i][j] = generateRandomDecimal(min, max);
-            }
-        }
-
-        return res;
-    }
-
-    /**
      * Generates matrix with random values from uniform distribution
      * @param rows - amount of rows
      * @param cols - amount of columns
@@ -98,28 +78,11 @@ public:
         Matrix res(rows, cols);
         std::random_device rd;
         std::mt19937 g(rd());
-//        std::mt19937 g(1);
         std::uniform_real_distribution<> distribution(min, max);
 
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
                 res.matrix[i][j] = distribution(g);
-            }
-        }
-
-        return res;
-    }
-
-    static Matrix<ELEMENT_TYPE> generateRandomMaskMatrix(size_t rows, size_t cols, float oneProp) {
-        Matrix res(rows, cols);
-
-        std::random_device rd;
-        std::mt19937 g(rd());
-        std::uniform_real_distribution<> dist(0, 1);
-
-        for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = 0; j < cols; ++j) {
-                res.matrix[i][j] = dist(g) > oneProp ? 0.f : 1.f;
             }
         }
 
@@ -267,23 +230,6 @@ public:
     }
 
     /**
-     * Transposes a matrix
-     * @return transposed matrix
-     */
-    Matrix transpose() {
-        Matrix res(numCols, numRows);
-
-        for (size_t i = 0; i < numRows; ++i) {
-#pragma omp simd
-            for (size_t j = 0; j < numCols; ++j) {
-                res.matrix[j][i] = matrix[i][j];
-            }
-        }
-
-        return res;
-    }
-
-    /**
      * Transposes matrix in place
      * @param result matrix to transpose
      */
@@ -298,6 +244,16 @@ public:
                 result.matrix[j][i] = matrix[i][j];
             }
         }
+    }
+
+    /**
+     * Transposes a matrix
+     * @return transposed matrix
+     */
+    Matrix transpose() {
+        Matrix res(numCols, numRows);
+        transpose(res);
+        return res;
     }
 
     /**
@@ -331,8 +287,6 @@ public:
             }
         }
     }
-
-    // Arithmetic operators
 
     /**
      * Addition of matrix to original matrix
@@ -581,30 +535,6 @@ public:
 private:
     static ELEMENT_TYPE generateRandomDecimal(ELEMENT_TYPE min, ELEMENT_TYPE max) {
         return (max - min) * ((((ELEMENT_TYPE) rand()) / (ELEMENT_TYPE) RAND_MAX)) + min;
-    }
-
-    /**
-     * Computes matrix multiplication in a dummy way
-     * @param rhs - a matrix we are multiplying with
-     * @param numRowsToMultiply - how many rows to multiply
-     * @return *this "matmul" rhs
-     */
-    Matrix slowMatmul(const Matrix &rhs, size_t numRowsToMultiply) const {
-        if (numCols != rhs.numRows) {
-            throw MatrixSizeException();
-        }
-
-        Matrix res(numRowsToMultiply, rhs.numCols, 0);
-
-        for (size_t i = 0; i < numRowsToMultiply; ++i) {
-            for (size_t j = 0; j < rhs.numCols; ++j) {
-                for (size_t k = 0; k < numCols; ++k) {
-                    res.matrix[i][j] += getItem(i, k) * rhs.getItem(k, j);
-                }
-            }
-        }
-
-        return res;
     }
 
     /**
