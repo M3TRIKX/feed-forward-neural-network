@@ -15,7 +15,7 @@ public:
     static void normal(Matrix<type> &matrix) {
         for (size_t i = 0; i < matrix.getNumRows(); ++i) {
             type rowSum = 0;
-            type rowMax = *(std::max_element(matrix.getMatrixRow(i).cbegin(), matrix.getMatrixRow(i).cend()));
+            type rowMax = matrix.getMaxRowElement(i);
 
             for (size_t j = 0; j < matrix.getNumCols(); ++j) {
                 // ToDo: Solve possible numeric error (due to float addition).

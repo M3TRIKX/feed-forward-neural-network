@@ -48,8 +48,7 @@ public:
 
     void normalize() {
         for (size_t i = 0; i < dataMatrix.getNumRows(); ++i) {
-            ELEMENT_TYPE maxRowVal = *(std::max_element(dataMatrix.getMatrix()[i].cbegin(),
-                                                        dataMatrix.getMatrix()[i].cend()));
+            ELEMENT_TYPE maxRowVal = dataMatrix.getMaxRowElement(i);
 
             for (size_t j = 0; j < dataMatrix.getNumCols(); ++j) {
                 dataMatrix.setItem(i, j, dataMatrix.getItem(i, j) / maxRowVal);
