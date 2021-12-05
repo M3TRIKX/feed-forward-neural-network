@@ -9,6 +9,7 @@
 #include "../network/config.h"
 #include "optimizer_template.h"
 #include <cmath>
+#include <math.h>
 
 /**
  * Class representing Adam optimizer
@@ -25,7 +26,6 @@ class AdamOptimizer : public Optimizer{
     std::vector<std::vector<float>> mb;
     std::vector<Matrix<float>> vw;
     std::vector<std::vector<float>> vb;
-
 public:
     /**
      * Creates Adam optimizer with it|s parameters
@@ -46,41 +46,42 @@ public:
         }
     }
 
-    void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, std::vector<std::vector<float>> &deltaBiases,
+    void update(std::vector<Matrix<float>> &weightDeltas, std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults, std::vector<std::vector<float>> &deltaBiases,
                 size_t batchSize, float eta) override {
         float batchEta = eta / static_cast<float>(batchSize);
+        float beta1Prime = 1 - beta1;
+        float beta2Prime = 1 - beta2;
+        float beta1PrimePower = 1 - beta1Power;
+        float beta2PrimePower = 1 - beta2Power;
 
-#pragma omp parallel for default(none) shared(deltaWeights, deltaBiases, activationResults, batchEta)
+#pragma omp parallel for default(none) shared(weightDeltas, deltaWeights, deltaBiases, activationResults, batchEta, beta1Prime, beta2Prime, beta1PrimePower, beta2PrimePower)
         for (size_t layer = 0; layer < weights->size(); ++layer) {
-            auto weightDelta = activationResults[layer].transpose();
-            weightDelta = weightDelta.matmul(deltaWeights[layer]);
+            auto &weightDelta = weightDeltas[layer];
 
             for (size_t i = 0; i < (*weights)[layer].getNumRows(); ++i) {
 #pragma omp simd
                 for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j) {
-                    mw[layer].setItem(i, j, beta1 * mw[layer].getItem(i, j) + (1 - beta1) * weightDelta.getItem(i, j));
-                    vw[layer].setItem(i, j, beta2 * vw[layer].getItem(i, j) + (1 - beta2) * std::pow(weightDelta.getItem(i, j), 2));
+                    mw[layer].setItem(i, j, beta1 * mw[layer].getItem(i, j) + beta1Prime * weightDelta.getItem(i, j));
+                    vw[layer].setItem(i, j, beta2 * vw[layer].getItem(i, j) + beta2Prime * powf(weightDelta.getItem(i, j), 2));
 
-                    auto mw_corr = mw[layer].getItem(i, j) / (1 - beta1Power);
-                    auto vw_corr = vw[layer].getItem(i, j) / (1 - beta2Power);
+                    auto mw_corr = mw[layer].getItem(i, j) / beta1PrimePower;
+                    auto vw_corr = vw[layer].getItem(i, j) / beta2PrimePower;
 
-                    (*weights)[layer].setItem(i, j, (*weights)[layer].getItem(i, j) - batchEta * (mw_corr / (std::sqrt(vw_corr) + eps)));
+                    (*weights)[layer].setItem(i, j, (*weights)[layer].getItem(i, j) - batchEta * (mw_corr / (sqrtf(vw_corr) + eps)));
                 }
             }
 
 #pragma omp simd
             for (size_t j = 0; j < (*weights)[layer].getNumCols(); ++j) {
-                mb[layer][j] = beta1 * mb[layer][j] + (1 - beta1) * deltaBiases[layer][j];
-                vb[layer][j] = beta2 * vb[layer][j] + (1 - beta2) * std::pow(deltaBiases[layer][j], 2);
-                auto mb_corr = mb[layer][j] / (1 - beta1Power);
-                auto vb_corr = vb[layer][j] / (1 - beta2Power);
-                (*biases)[layer][j] -= batchEta * (mb_corr / (std::sqrt(vb_corr) + eps));
+                mb[layer][j] = beta1 * mb[layer][j] + beta1Prime * deltaBiases[layer][j];
+                vb[layer][j] = beta2 * vb[layer][j] + beta2Prime * powf(deltaBiases[layer][j], 2);
+                auto mb_corr = mb[layer][j] / beta1PrimePower;
+                auto vb_corr = vb[layer][j] / beta2PrimePower;
+                (*biases)[layer][j] -= batchEta * (mb_corr / (sqrtf(vb_corr) + eps));
             }
 
             (*weights)[layer].transpose((*weightsTransposed)[layer]);
         }
-
-// #pragma omp barrier
 
         t += 1;
         beta1Power *= beta1;

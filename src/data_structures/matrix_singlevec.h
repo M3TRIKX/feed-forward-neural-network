@@ -11,8 +11,10 @@
 #include <random>
 #include <vector>
 #include <omp.h>
+#include <cstring>
 
-class MatrixSizeException: std::exception {};
+class MatrixSizeException : std::exception {
+};
 
 /**
  * Class representing a matrix
@@ -21,13 +23,12 @@ template<typename ELEMENT_TYPE>
 class Matrix {
     size_t numRows;
     size_t numCols;
-//    std::vector<std::vector<ELEMENT_TYPE>> matrix;
     std::vector<ELEMENT_TYPE> matrix;
 
     static const int DECIMAL_PLACES_IN_PRINT = 4;
 
 public:
-    Matrix(): numRows(0), numCols(0) {}
+    Matrix() : numRows(0), numCols(0) {}
 
     /**
      * Matrix class constructor, initiates the matrix with zeros
@@ -36,7 +37,6 @@ public:
      */
     Matrix(size_t rows, size_t cols) :
             numRows(rows), numCols(cols), matrix(rows * cols, 0) {
-//        std::cout << cols << std::endl;
     }
 
     /**
@@ -47,7 +47,6 @@ public:
      */
     Matrix(size_t rows, size_t cols, ELEMENT_TYPE defaultValue) :
             numRows(rows), numCols(cols), matrix(rows * cols, defaultValue) {
-//        std::cout << cols << std::endl;
     }
 
     /**
@@ -60,7 +59,7 @@ public:
         }
 
         size_t rowSize = vecMatrix[0].size();
-        for (auto const &row : vecMatrix) {
+        for (auto const &row: vecMatrix) {
             if (row.size() != rowSize) {
                 throw std::exception();
             }
@@ -70,10 +69,8 @@ public:
         numCols = rowSize;
 
         matrix.reserve(numRows * numCols);
-//        auto startIt = matrix.begin();
-        for (const auto &row : vecMatrix) {
+        for (const auto &row: vecMatrix) {
             std::copy(row.begin(), row.end(), std::back_inserter(matrix));
-//            std::advance(startIt, numCols);
         }
     }
 
@@ -85,7 +82,8 @@ public:
      * @param max - upper bound
      * @return generated matrix
      */
-    static Matrix<ELEMENT_TYPE> generateRandomUniformMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
+    static Matrix<ELEMENT_TYPE>
+    generateRandomUniformMatrix(size_t rows, size_t cols, ELEMENT_TYPE min, ELEMENT_TYPE max) {
         Matrix res(rows, cols);
         std::random_device rd;
         std::mt19937 g(rd());
@@ -107,7 +105,6 @@ public:
      * @return batch-sized matrices
      */
     static auto generateBatches(const Matrix<ELEMENT_TYPE> &mat, size_t batchSize) {
-        auto currentIt = mat.matrix.begin();
         size_t alreadyProcessed = 0;
         size_t matRows = mat.numRows;
 
@@ -157,9 +154,11 @@ public:
      * Prints matrix to standard output
      */
     void printMatrix() {
-        for (size_t i = 0; i < numRows; i++) {
-            for (size_t j = 0; j < numCols; j++) {
-                std::cout << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << getItem(i, j) << " ";
+        for (size_t i = 0; i < numRows; ++i) {
+            for (size_t j = 0; j < numCols; ++j) {
+                std::cout << std::fixed
+                          << std::setprecision(DECIMAL_PLACES_IN_PRINT)
+                          << getItem(i, j) << " ";
             }
             std::cout << std::endl;
         }
@@ -187,7 +186,7 @@ public:
      * @return item
      */
     auto getItem(size_t row, size_t col) const {
-        return matrix[numCols*row + col];
+        return matrix[numCols * row + col];
     }
 
     /**
@@ -197,11 +196,11 @@ public:
      * @param val - value to set
      */
     void setItem(size_t row, size_t col, ELEMENT_TYPE val) {
-        matrix[numCols*row + col] = val;
+        matrix[numCols * row + col] = val;
     }
 
     auto getMaxRowElement(size_t row) {
-        auto startIt = matrix.begin() + row*numCols;
+        auto startIt = matrix.begin() + row * numCols;
         auto endIt = startIt + numCols;
         return *(std::max_element(startIt, endIt));
     }
@@ -236,15 +235,17 @@ public:
         return fasterSlowMatmul(m2, numRowsToMultiply);
     }
 
+    void matmul(const Matrix &m2, Matrix &res, int numRowsToMultiply = -1, int numColsToMultiply = -1) const {
+        numRowsToMultiply = numRowsToMultiply == -1 ? getNumRows() : numRowsToMultiply;
+        numColsToMultiply = numColsToMultiply == -1 ? getNumCols() : numColsToMultiply;
+        fasterSlowMatmul(m2, numRowsToMultiply, numColsToMultiply, res);
+    }
+
     /**
      * Transposes matrix in place
      * @param result matrix to transpose
      */
     void transpose(Matrix &result) {
-        if (result.numRows != numCols || result.numCols != numRows) {
-            throw MatrixSizeException();
-        }
-
         for (size_t i = 0; i < numRows; ++i) {
 #pragma omp simd
             for (size_t j = 0; j < numCols; ++j) {
@@ -263,6 +264,10 @@ public:
         return res;
     }
 
+    void reset() {
+        std::fill(matrix.begin(), matrix.end(), 0);
+    }
+
     /**
      * Applies given function to matrix and returns a result matrix.
      * @tparam F - Function type
@@ -271,7 +276,7 @@ public:
     template<typename F>
     void applyFunction(F f) {
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+#pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
                 setItem(i, j, f(getItem(i, j)));
             }
@@ -307,7 +312,7 @@ public:
         for (size_t i = 0; i < getNumRows(); i++) {
 #pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
-                matrix[i*numCols + j] += rhs.getItem(i, j);
+                matrix[i * numCols + j] += rhs.getItem(i, j);
             }
         }
 
@@ -327,7 +332,7 @@ public:
         for (size_t i = 0; i < getNumRows(); ++i) {
 #pragma omp simd
             for (size_t j = 0; j < getNumCols(); ++j) {
-                matrix[i*numCols + j] += rhs[j];
+                matrix[i * numCols + j] += rhs[j];
             }
         }
 
@@ -342,7 +347,7 @@ public:
     auto &operator+=(ELEMENT_TYPE x) {
         for (size_t i = 0; i < getNumRows(); ++i) {
             for (size_t j = 0; j < getNumCols(); ++j) {
-                matrix[i*numCols + j] += x;
+                matrix[i * numCols + j] += x;
             }
         }
 
@@ -360,9 +365,9 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+#pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
-                matrix[i*numCols + j] -= rhs.getItem(i, j);
+                matrix[i * numCols + j] -= rhs.getItem(i, j);
             }
         }
 
@@ -380,9 +385,9 @@ public:
         }
 
         for (size_t i = 0; i < getNumRows(); i++) {
-            #pragma omp simd
+#pragma omp simd
             for (size_t j = 0; j < getNumCols(); j++) {
-                matrix[i*numCols + j] *= rhs.getItem(i, j);
+                matrix[i * numCols + j] *= rhs.getItem(i, j);
             }
         }
 
@@ -396,9 +401,9 @@ public:
      */
     auto &operator*=(ELEMENT_TYPE x) {
         for (size_t i = 0; i < numRows; ++i) {
-            #pragma omp simd
+#pragma omp simd
             for (size_t j = 0; j < numCols; ++j) {
-                matrix[i*numCols + j] *= x;
+                matrix[i * numCols + j] *= x;
             }
         }
 
@@ -478,7 +483,7 @@ public:
      * @return divided lhs matrix
      */
     friend auto operator/(Matrix<ELEMENT_TYPE> lhs, ELEMENT_TYPE x) {
-        lhs *= 1/x;
+        lhs *= 1 / x;
         return lhs;
     }
 
@@ -490,51 +495,12 @@ public:
      */
     friend auto operator/(Matrix<ELEMENT_TYPE> lhs, const Matrix<ELEMENT_TYPE> &rhs) {
         for (size_t i = 0; i < lhs.numRows; ++i) {
-            #pragma omp simd
+#pragma omp simd
             for (size_t j = 0; j < lhs.numCols; ++j) {
                 lhs.setItem(i, j, lhs.getItem(i, j) / rhs.getItem(i, j));
             }
         }
         return lhs;
-    }
-
-    /**
-     * Checks whether two matrices are equal
-     * @param lhs - first matrix
-     * @param rhs - second matrix
-     * @return true if the matrices are equal
-     */
-    friend bool operator==(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
-        return lhs.matrix == rhs.matrix;
-    }
-
-    /**
-     * Checks whether two matrices are different
-     * @param lhs - first matrix
-     * @param rhs - second matrix
-     * @return true if the matrices are not equal
-     */
-    friend bool operator!=(const Matrix<ELEMENT_TYPE> &lhs, const Matrix<ELEMENT_TYPE> &rhs) {
-        return lhs.matrix != rhs.matrix;
-    }
-
-    /**
-     * Applies power of x to each element
-     * @param x - power
-     * @return Changed matrix
-     */
-    auto pow(size_t x){
-        applyFunction([x](ELEMENT_TYPE k) {return (std::pow(k,x));});
-        return *this;
-    }
-
-    /**
-     * Applies sqrt to each element
-     * @return Changed matrix
-     */
-    auto sqrt(){
-        applyFunction([](ELEMENT_TYPE k) {return (std::sqrt(k));});
-        return *this;
     }
 
     friend class DataManager;
@@ -555,15 +521,35 @@ private:
 
         for (size_t i = 0; i < numRowsToMultiply; ++i) {
             for (size_t k = 0; k < numCols; ++k) {
+                __builtin_prefetch(rhs.matrix.data());
                 float x = getItem(i, k);
 #pragma omp simd
                 for (size_t j = 0; j < rhs.numCols; ++j) {
-                    res.matrix[i*res.numCols + j] += x * rhs.getItem(k, j);
+                    res.matrix[i * res.numCols + j] += x * rhs.getItem(k, j);
                 }
             }
         }
 
         return res;
+    }
+
+    void fasterSlowMatmul(const Matrix &rhs, size_t numRowsToMultiply, size_t numColsToMultiply, Matrix &res) const {
+        if (numColsToMultiply != rhs.numRows) {
+            throw MatrixSizeException();
+        }
+
+        std::memset(res.matrix.data(), 0, res.matrix.size() * sizeof(float));
+
+        for (size_t i = 0; i < numRowsToMultiply; ++i) {
+            for (size_t k = 0; k < numColsToMultiply; ++k) {
+                __builtin_prefetch(rhs.matrix.data());
+                float x = getItem(i, k);
+#pragma omp simd
+                for (size_t j = 0; j < rhs.numCols; ++j) {
+                    res.matrix[i * res.numCols + j] += x * rhs.getItem(k, j);
+                }
+            }
+        }
     }
 };
 

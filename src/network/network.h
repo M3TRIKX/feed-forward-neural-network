@@ -34,6 +34,7 @@ class Network {
 
     std::vector<Matrix<ELEMENT_TYPE>> deltaWeights;
     std::vector<std::vector<ELEMENT_TYPE>> deltaBiases;
+    std::vector<Matrix<ELEMENT_TYPE>> weightDeltas;
 
     std::vector<std::vector<Matrix<ELEMENT_TYPE>>> parallelDeltaWeights;
     std::vector<std::vector<std::vector<ELEMENT_TYPE>>> parallelDeltaBiases;
@@ -76,6 +77,8 @@ public:
                                                                    limit));
             }
 
+            weightDeltas.emplace_back(layer.numNeurons, nextLayer.numNeurons, 0);
+
             weightsTransposed.push_back(weights[i].transpose());
 
             // Init biases as zero
@@ -115,6 +118,7 @@ public:
     auto predictParallel(const std::vector<Matrix<float>> &data, const std::vector<std::vector<unsigned int>> &labels);
 
 private:
+    auto forwardPass(const Matrix<float> &data, const std::vector<unsigned int> &labels, size_t kthThread);
     auto forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
                              const std::vector<std::vector<unsigned int>> &labels);
 

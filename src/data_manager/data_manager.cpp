@@ -31,34 +31,6 @@ TrainValSplit_t DataManager::trainValidateSplit(const Matrix<elem_type> &dataMat
     };
 }
 
-//DataLabelsShuffle_t DataManager::randomShuffle(Matrix<elem_type> &&dataMatrix, Matrix<unsigned int> &&labelsMatrix) {
-//    if (dataMatrix.getNumRows() != labelsMatrix.getNumRows()) {
-//        throw WrongInputMatricesException();
-//    }
-//
-//    std::vector<size_t> indexes(dataMatrix.getNumRows());
-//    for (size_t i = 0; i < dataMatrix.getNumRows(); ++i) indexes[i] = i;
-//
-//    std::random_device rd;
-//    std::mt19937 g(rd());
-//    std::shuffle(indexes.begin(), indexes.end(), g);
-//
-//    std::vector<std::vector<elem_type>> data(indexes.size());
-//    std::vector<std::vector<unsigned int>> labels(indexes.size());
-//
-//    size_t i = 0;
-//    for (auto j : indexes) {
-//        data[i] = std::move(dataMatrix.matrix[j]);
-//        labels[i] = std::move(labelsMatrix.matrix[j]);
-//        ++i;
-//    }
-//
-//    return {
-//            .data=Matrix<elem_type>(std::move(data)),
-//            .labels=Matrix<unsigned int>(std::move(labels)),
-//    };
-//}
-
 DataLabelsShuffle_t DataManager::randomShuffle(Matrix<elem_type> &&dataMatrix, std::vector<unsigned int> &&labelsMatrix) {
     if (dataMatrix.getNumRows() != labelsMatrix.size()) {
         throw WrongInputMatricesException();
@@ -79,7 +51,6 @@ DataLabelsShuffle_t DataManager::randomShuffle(Matrix<elem_type> &&dataMatrix, s
         for (size_t k = 0; k < dataMatrix.getNumCols(); ++k) {
             data[i][k] = dataMatrix.matrix[j*dataMatrix.getNumCols() + k];
         }
-//        data[i] = std::move(dataMatrix.matrix[j]);
         labels[i] = labelsMatrix[j];
         ++i;
     }

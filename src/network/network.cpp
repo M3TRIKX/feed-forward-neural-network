@@ -1,9 +1,10 @@
 #include <chrono>
+#include <cassert>
 #include "network.h"
 #include "../statistics/weights_info.h"
 
 void Network::updateWeights(size_t batchSize, float eta) {
-    optimizer->update(deltaWeights, activationResults, deltaBiases, batchSize, eta);
+    optimizer->update(weightDeltas, deltaWeights, activationResults, deltaBiases, batchSize, eta);
 }
 
 Matrix<Network::ELEMENT_TYPE> Network::predict(const Matrix<float> &data) {
@@ -23,24 +24,54 @@ Matrix<Network::ELEMENT_TYPE> Network::predict(const Matrix<float> &data) {
     return tmp;
 }
 
+auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<unsigned int> &labels,
+                  size_t kthThread) {
+
+    parallelActivationDerivResults[kthThread].clear();
+    parallelActivationResults[kthThread].clear();
+
+    parallelActivationResults[kthThread].push_back(data);
+
+    auto tmp = data.matmul(weights[0]);
+    tmp += biases[0];
+
+    networkConfig.layersConfig[1].activationFunction(tmp);
+    parallelActivationResults[kthThread].push_back(tmp);
+
+    if (weights.size() == 1) {
+        parallelActivationDerivResults[kthThread].emplace_back();
+    } else {
+        auto tmpCopy = tmp;
+        networkConfig.layersConfig[1].activationDerivFunction(tmpCopy);
+        parallelActivationDerivResults[kthThread].push_back(tmpCopy);
+    }
+
+    for (size_t i = 1; i < weights.size(); ++i) {
+        tmp = tmp.matmul(weights[i]);
+        tmp += biases[i];
+
+        // kthThread + 1 due to the way we store activation functions.
+        networkConfig.layersConfig[i + 1].activationFunction(tmp);
+        parallelActivationResults[kthThread].push_back(tmp);
+
+        if (i == weights.size() - 1) {
+            parallelActivationDerivResults[kthThread].emplace_back();
+        } else {
+            auto tmpCopy = tmp;
+            networkConfig.layersConfig[i + 1].activationDerivFunction(tmpCopy);
+            parallelActivationDerivResults[kthThread].push_back(tmpCopy);
+        }
+    }
+
+    return StatsPrinter::getStats(tmp, labels);
+}
+
 auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
                                   const std::vector<std::vector<unsigned int>> &labels) {
     float acc = 0;
     float ce = 0;
     size_t batchSize = 0;
     for (auto &subBatch : data) batchSize += subBatch.getNumRows();
-
-    static auto printAcc = [](ELEMENT_TYPE acc) {std::cout << acc << std::endl;};
-    static auto copyPart = [](Matrix<ELEMENT_TYPE> &res, const Matrix<ELEMENT_TYPE> &part, size_t startRow) {
-        if (res.getNumCols() != part.getNumCols())
-            throw std::exception();
-
-        for (size_t i = startRow; i < startRow + part.getNumRows(); ++i) {
-            for (size_t j = 0; j < part.getNumCols(); ++j) {
-                res.setItem(i, j, part.getItem(i - startRow, j));
-            }
-        }
-    };
 
     size_t currentStartRows = 0;
     std::vector<size_t> startRows;
@@ -49,16 +80,9 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         currentStartRows += d.getNumRows();
     }
 
-    activationResults.clear();
-    activationDerivResults.clear();
-    deltaWeights.clear();
     deltaBiases.clear();
 
-    activationResults.emplace_back(batchSize, weights[0].getNumRows(), 0);
-    for (auto & weight : weights) {
-        activationResults.emplace_back(batchSize, weight.getNumCols(), 0);
-        activationDerivResults.emplace_back(batchSize, weight.getNumCols(), 0);
-        deltaWeights.emplace_back(batchSize, weight.getNumCols(), 0);
+    for (auto &weight : weights) {
         deltaBiases.emplace_back(weight.getNumCols());
 
         if (weight.getNumCols() == 0) {
@@ -66,69 +90,19 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         }
     }
 
-    for (auto &deltaBias : deltaBiases) {
-        std::fill(deltaBias.begin(), deltaBias.end(), 0);
+#pragma omp parallel for default(none) shared(weightDeltas)
+    for (size_t i = 0; i < weightDeltas.size(); ++i) {
+        weightDeltas[i].reset();
+        std::fill(deltaBiases[i].begin(), deltaBiases[i].end(), 0);
     }
 
-#pragma omp parallel for default(none) shared(acc, ce, data, labels, printAcc, copyPart, startRows, parallelActivationResults, parallelActivationDerivResults, deltaWeights, deltaBiases, activationResults, activationDerivResults, networkConfig, weightsTransposed)
+#pragma omp parallel for default(none) shared(acc, ce, data, labels, startRows, parallelActivationResults, parallelActivationDerivResults, deltaWeights, deltaBiases, activationResults, activationDerivResults, networkConfig, weightsTransposed)
         for (size_t k = 0; k < numThreads; ++k) {
             // Last batch might be smaller.
             if (data.size() - 1 < k)
                 continue;
 
-            parallelActivationResults[k].clear();
-            parallelActivationDerivResults[k].clear();
-            // Input layer has activation fn equal to identity.
-            parallelActivationResults[k].push_back(data[k]);
-
-            copyPart(activationResults[0], data[k], startRows[k]);
-
-            auto tmp = data[k].matmul(weights[0]);
-            tmp += biases[0];
-
-            networkConfig.layersConfig[1].activationFunction(tmp);
-            parallelActivationResults[k].push_back(tmp);
-
-            copyPart(activationResults[1], tmp, startRows[k]);
-
-            if (weights.size() == 1) {
-                parallelActivationDerivResults[k].emplace_back();
-            }
-            else {
-                auto tmpCopy = tmp;
-                networkConfig.layersConfig[1].activationDerivFunction(tmpCopy);
-                parallelActivationDerivResults[k].push_back(tmpCopy);
-                copyPart(activationDerivResults[0], tmpCopy, startRows[k]);
-            }
-
-            for (size_t i = 1; i < weights.size(); ++i) {
-                tmp = tmp.matmul(weights[i]);
-                tmp += biases[i];
-
-                // k + 1 due to the way we store activation functions.
-                networkConfig.layersConfig[i + 1].activationFunction(tmp);
-                parallelActivationResults[k].push_back(tmp);
-
-                copyPart(activationResults[i + 1], tmp, startRows[k]);
-
-                if (i == weights.size() - 1) {
-                    parallelActivationDerivResults[k].emplace_back();
-                }
-                else {
-                    auto tmpCopy = tmp;
-                    networkConfig.layersConfig[i + 1].activationDerivFunction(tmpCopy);
-                    parallelActivationDerivResults[k].push_back(tmpCopy);
-                    copyPart(activationDerivResults[i], tmpCopy, startRows[k]);
-                }
-            }
-
-            auto stats = StatsPrinter::getStats(tmp, labels[k]);
-
-#pragma omp critical
-            {
-                acc += stats.accuracy;
-                ce += stats.crossEntropy;
-            };
+            auto stats = forwardPass(data[k], labels[k], k);
 
             // Do backprop and then aggregate values into deltaWeights and deltaBiases
             const auto &lastLayerConf = networkConfig.layersConfig[networkConfig.layersConfig.size() - 1];
@@ -138,18 +112,29 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
 
             size_t numLayers = networkConfig.layersConfig.size();
 
-            parallelDeltaWeights[k][numLayers - 2] = CrossentropyFunction::costDelta(parallelActivationResults[k][numLayers - 1], labels[k]);
-            auto *lastDelta = &(parallelDeltaWeights[k][numLayers - 2]);
+            auto lastLayerDelta = CrossentropyFunction::costDelta(parallelActivationResults[k][numLayers - 1],
+                                                                  labels[k]);
+            auto *lastDelta = &lastLayerDelta;
+            auto wDelta = parallelActivationResults[k][numLayers - 2].transpose().matmul(lastLayerDelta);
 
-            copyPart(deltaWeights[numLayers - 2], parallelDeltaWeights[k][numLayers - 2], startRows[k]);
+#pragma omp critical
+            {
+                acc += stats.accuracy;
+                ce += stats.crossEntropy;
+                weightDeltas[numLayers - 2] += wDelta;
+            };
 
             for (int i = static_cast<int>(numLayers) - 2; i > 0; --i) {
                 auto matmuls = lastDelta->matmul(weightsTransposed[i]);
                 matmuls *= parallelActivationDerivResults[k][i - 1];
-                parallelDeltaWeights[k][i - 1] = matmuls;
-                lastDelta = &(parallelDeltaWeights[k][i - 1]);
+                lastLayerDelta = matmuls;
+                lastDelta = &lastLayerDelta;
+                wDelta = parallelActivationResults[k][i - 1].transpose().matmul(matmuls);
 
-                copyPart(deltaWeights[i - 1], parallelDeltaWeights[k][i - 1], startRows[k]);
+#pragma omp critical
+                {
+                    weightDeltas[i - 1] += wDelta;
+                };
             }
 
             for (size_t i = 0; i < numLayers - 1; ++i) {
@@ -172,7 +157,6 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         }
 
     return Stats{.accuracy=acc / numThreads, .crossEntropy=ce / numThreads};
-
 }
 
 auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches, const std::vector<std::vector<unsigned int>> &labels) {
@@ -233,8 +217,8 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     auto &validation_X = trainValSplit.validationData;
     auto &validation_y = trainValSplit.validationLabels;
 
-    auto validationBatches_X = Matrix<float>::generateBatches(validation_X, validation_X.getNumRows() / numThreads);
-    auto validationBatches_y = Matrix<unsigned int>::generateVectorBatches(validation_y, validation_y.size() / numThreads);
+    auto validationBatches_X = Matrix<float>::generateBatches(validation_X, (validation_X.getNumRows() + numThreads - 1) / numThreads);
+    auto validationBatches_y = Matrix<unsigned int>::generateVectorBatches(validation_y, (validation_y.size() + numThreads - 1) / numThreads);
 
     // Copy train data
     auto shuffledTrain_X = train_X;
@@ -246,7 +230,7 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     float accSum = 0;
     float ceSum = 0;
 
-    size_t numBatches = trainBatches_X.size();
+    size_t numBatches = train_X.getNumRows() / batchSize;
     size_t t = 0;
 
     float currentBestCE = 10000;
@@ -269,10 +253,10 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
         std::vector<std::vector<std::vector<unsigned int>>> parallelBatches_y;
 
         for (auto &batch : trainBatches_X) {
-            parallelBatches_X.emplace_back(Matrix<float>::generateBatches(batch, batchSize / numThreads));
+            parallelBatches_X.emplace_back(Matrix<float>::generateBatches(batch, (batch.getNumRows() + numThreads -1) / numThreads));
         }
         for (auto &batch : trainBatches_y) {
-            parallelBatches_y.emplace_back(Matrix<unsigned int>::generateVectorBatches(batch, batchSize / numThreads));
+            parallelBatches_y.emplace_back(Matrix<unsigned int>::generateVectorBatches(batch, (batch.size() + numThreads - 1) / numThreads));
         }
 
         auto start = std::chrono::high_resolution_clock::now();

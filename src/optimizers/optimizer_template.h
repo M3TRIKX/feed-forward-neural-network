@@ -44,7 +44,7 @@ public:
      * @param batchSize - Data batch size
      * @param eta - Learning rate
      */
-    virtual void update(std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults,
+    virtual void update(std::vector<Matrix<float>> &weightDeltas, std::vector<Matrix<float>> &deltaWeights, std::vector<Matrix<float>> &activationResults,
                         std::vector<std::vector<float>> &deltaBias, size_t batchSize, float eta) = 0;
 };
 
