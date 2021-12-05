@@ -46,51 +46,53 @@ struct Configuration {
 /**
  * Configuration tester
  */
-class ConfigTester{
+class ConfigTester {
     TrainValSplit_t &data;
     CsvReader<float> &testVectors;
     CsvReader<unsigned int> &testLabels;
 
-    public:
-        ConfigTester(TrainValSplit_t &data, CsvReader<float> &testVectors, CsvReader<unsigned int> &testLabels) : data(data), testVectors(testVectors), testLabels(testLabels){}
+public:
+    ConfigTester(TrainValSplit_t &data, CsvReader<float> &testVectors, CsvReader<unsigned int> &testLabels) : data(
+            data), testVectors(testVectors), testLabels(testLabels) {}
 
-        /**
-         * Test given configurations
-         * @param configurations - configurations to test
-         * @param runsPerConfig - how many times should each configuration run
-         * @param verbose - verbose level
-         * @param printProgress - true if you want to print progress
-         */
-        void testConfigs(std::vector<Configuration> &configurations, size_t runsPerConfig, size_t verbose, bool printProgress);
+    /**
+     * Test given configurations
+     * @param configurations - configurations to test
+     * @param runsPerConfig - how many times should each configuration run
+     * @param verbose - verbose level
+     * @param printProgress - true if you want to print progress
+     */
+    void
+    testConfigs(std::vector<Configuration> &configurations, size_t runsPerConfig, size_t verbose, bool printProgress);
 
-        /**
-         * Print info about configuration
-         * @param configuration - configuration to print information about
-         * @param runs - how many times the configuration should be ran
-         */
-        void printConfigInfo(Configuration configuration, size_t runs);
+    /**
+     * Print info about configuration
+     * @param configuration - configuration to print information about
+     * @param runs - how many times the configuration should be ran
+     */
+    void printConfigInfo(Configuration configuration, size_t runs);
 
-        /**
-         * Prints result statistics of the configuration
-         * @param accuracies - resulting accuracies of runs
-         * @param losses - resulting loss values of runs
-         * @param times - run-times of runs
-         */
-        void printConfigResults(std::vector<float> &accuracies, std::vector<float> &losses, std::vector<float> &times);
+    /**
+     * Prints result statistics of the configuration
+     * @param accuracies - resulting accuracies of runs
+     * @param losses - resulting loss values of runs
+     * @param times - run-times of runs
+     */
+    void printConfigResults(std::vector<float> &accuracies, std::vector<float> &losses, std::vector<float> &times);
 
-        /**
-         * Prints results sorted by the best accuracy with topology information
-         * @param results - accuracy of each configuration
-         */
-        void printFinalResults(std::multimap<float, std::string, std::greater<int>> &results);
+    /**
+     * Prints results sorted by the best accuracy with topology information
+     * @param results - accuracy of each configuration
+     */
+    void printFinalResults(std::multimap<float, std::string, std::greater<int>> &results);
 
-        /**
-         * Runs parallel configuration test - each configuration once. Ideal for global parameter search
-         * @param configurations - configurations to test
-         * @param verbose - verbose level
-         * @param threads - on how many threads should the test run
-         */
-        void runParallelConfigTest(std::vector<Configuration> &configurations, size_t verbose, size_t threads);
+    /**
+     * Runs parallel configuration test - each configuration once. Ideal for global parameter search
+     * @param configurations - configurations to test
+     * @param verbose - verbose level
+     * @param threads - on how many threads should the test run
+     */
+    void runParallelConfigTest(std::vector<Configuration> &configurations, size_t verbose, size_t threads);
 };
 
 #endif //FEEDFORWARDNEURALNET_CONFIG_TESTER_H

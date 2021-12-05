@@ -12,9 +12,10 @@
 #include <vector>
 #include <fstream>
 
-class CsvReadError: std::exception {};
+class CsvReadError : std::exception {
+};
 
-template <typename ELEMENT_TYPE>
+template<typename ELEMENT_TYPE>
 class CsvReader {
     std::vector<std::vector<ELEMENT_TYPE>> data;
     Matrix<ELEMENT_TYPE> dataMatrix;

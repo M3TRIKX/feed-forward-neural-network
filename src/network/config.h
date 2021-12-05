@@ -23,15 +23,17 @@ struct LayerConfig {
     ActivationFunction_t activationFunction;
     ActivationFunction_t activationDerivFunction;
     ActivationFunction activationFunctionType;
+
     LayerConfig(size_t numNeurons,
                 ActivationFunction fnType,
                 ActivationFunction_t fn = {},
-                ActivationFunction_t fnDeriv = {}):
+                ActivationFunction_t fnDeriv = {}) :
             numNeurons(numNeurons), activationFunction(std::move(fn)),
             activationDerivFunction(fnDeriv), activationFunctionType(fnType) {}
 };
 
-class WrongActivationFunction : public std::exception {};
+class WrongActivationFunction : public std::exception {
+};
 
 /**
  * Network configuration

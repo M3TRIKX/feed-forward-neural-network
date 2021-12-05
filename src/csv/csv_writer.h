@@ -11,7 +11,8 @@
 #include <sstream>
 #include <vector>
 
-class CsvWriteError: std::exception {};
+class CsvWriteError : std::exception {
+};
 
 template<typename T>
 class CsvWriter {

@@ -6,14 +6,13 @@
 #define FEEDFORWARDNEURALNET_FAST_SIGMOID_H
 
 #include "template.h"
-#include <math.h>
 
 /**
  * FastSigmoid is an approximation to the sigmoid function.
  * The reason for using the fast version over the normal one is the speed
  * of computation.
  */
-class FastSigmoid: public ActivationFunctionTemplate {
+class FastSigmoid : public ActivationFunctionTemplate {
 public:
     static void normal(Matrix<type> &matrix) {
         auto fn = [](type x) {
@@ -23,7 +22,7 @@ public:
     }
 
     static void derivative(Matrix<type> &matrix) {
-        auto fn = [] (type x) {
+        auto fn = [](type x) {
             return x / (1 + abs(x));
         };
 

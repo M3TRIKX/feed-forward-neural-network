@@ -27,12 +27,9 @@ class Network {
     std::vector<Matrix<ELEMENT_TYPE>> weightsTransposed;
     std::vector<std::vector<ELEMENT_TYPE>> biases;
 
-    std::vector<Matrix<ELEMENT_TYPE>> activationDerivResults;
-    std::vector<Matrix<ELEMENT_TYPE>> activationResults;
     std::vector<std::vector<Matrix<ELEMENT_TYPE>>> parallelActivationResults;
     std::vector<std::vector<Matrix<ELEMENT_TYPE>>> parallelActivationDerivResults;
 
-    std::vector<Matrix<ELEMENT_TYPE>> deltaWeights;
     std::vector<std::vector<ELEMENT_TYPE>> deltaBiases;
     std::vector<Matrix<ELEMENT_TYPE>> weightDeltas;
 
@@ -43,11 +40,6 @@ class Network {
 
 public:
     Network(const Config &config, Optimizer *optimizer) : networkConfig(config), optimizer(optimizer) {
-        activationDerivResults.emplace_back();
-        activationResults.emplace_back();
-
-        deltaWeights.reserve(config.layersConfig.size());
-
         for (size_t i = 0; i < numThreads; ++i) {
             parallelActivationResults.emplace_back(config.layersConfig.size());
             parallelActivationDerivResults.emplace_back(config.layersConfig.size());
@@ -69,7 +61,7 @@ public:
                         Matrix<float>::generateRandomUniformMatrix(layer.numNeurons, nextLayer.numNeurons, -limit,
                                                                    limit));
             }
-            // Uniform Glorot initialization
+                // Uniform Glorot initialization
             else {
                 float limit = 6 / sqrt(layer.numNeurons + nextLayer.numNeurons);
                 weights.push_back(
@@ -78,13 +70,11 @@ public:
             }
 
             weightDeltas.emplace_back(layer.numNeurons, nextLayer.numNeurons, 0);
-
             weightsTransposed.push_back(weights[i].transpose());
 
             // Init biases as zero
             biases.emplace_back(nextLayer.numNeurons, 0);
             deltaBiases.emplace_back(nextLayer.numNeurons, 0);
-            deltaWeights.emplace_back(0, 0, 0);
 
             for (size_t k = 0; k < numThreads; ++k) {
                 parallelDeltaWeights[k].emplace_back();
@@ -106,7 +96,7 @@ public:
     void fit(const TrainValSplit_t &trainValSplit, size_t numEpochs = 1, size_t batchSize = 32, float eta = 0.1,
              float lambda = 1e-6, uint8_t verboseLevel = 0, LRScheduler *sched = nullptr,
              size_t earlyStopping = 0,
-             long int maxTimeMs = 0);
+             long maxTimeMs = 0);
 
     /**
      * Predicts the data labels (should be ran on a trained network, otherwise it's just a random projection).
@@ -119,6 +109,7 @@ public:
 
 private:
     auto forwardPass(const Matrix<float> &data, const std::vector<unsigned int> &labels, size_t kthThread);
+
     auto forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
                              const std::vector<std::vector<unsigned int>> &labels);
 

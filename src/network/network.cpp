@@ -4,7 +4,7 @@
 #include "../statistics/weights_info.h"
 
 void Network::updateWeights(size_t batchSize, float eta) {
-    optimizer->update(weightDeltas, deltaWeights, activationResults, deltaBiases, batchSize, eta);
+    optimizer->update(weightDeltas, deltaBiases, batchSize, eta);
 }
 
 Matrix<Network::ELEMENT_TYPE> Network::predict(const Matrix<float> &data) {
@@ -25,7 +25,7 @@ Matrix<Network::ELEMENT_TYPE> Network::predict(const Matrix<float> &data) {
 }
 
 auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<unsigned int> &labels,
-                  size_t kthThread) {
+                          size_t kthThread) {
 
     parallelActivationDerivResults[kthThread].clear();
     parallelActivationResults[kthThread].clear();
@@ -71,18 +71,18 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
     float acc = 0;
     float ce = 0;
     size_t batchSize = 0;
-    for (auto &subBatch : data) batchSize += subBatch.getNumRows();
+    for (auto &subBatch: data) batchSize += subBatch.getNumRows();
 
     size_t currentStartRows = 0;
     std::vector<size_t> startRows;
-    for (auto &d : data) {
+    for (auto &d: data) {
         startRows.push_back(currentStartRows);
         currentStartRows += d.getNumRows();
     }
 
     deltaBiases.clear();
 
-    for (auto &weight : weights) {
+    for (auto &weight: weights) {
         deltaBiases.emplace_back(weight.getNumCols());
 
         if (weight.getNumCols() == 0) {
@@ -96,70 +96,70 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         std::fill(deltaBiases[i].begin(), deltaBiases[i].end(), 0);
     }
 
-#pragma omp parallel for default(none) shared(acc, ce, data, labels, startRows, parallelActivationResults, parallelActivationDerivResults, deltaWeights, deltaBiases, activationResults, activationDerivResults, networkConfig, weightsTransposed)
-        for (size_t k = 0; k < numThreads; ++k) {
-            // Last batch might be smaller.
-            if (data.size() - 1 < k)
-                continue;
+#pragma omp parallel for default(none) shared(acc, ce, data, labels, startRows, parallelActivationResults, parallelActivationDerivResults, deltaBiases, networkConfig, weightsTransposed)
+    for (size_t k = 0; k < numThreads; ++k) {
+        if (data.size() - 1 < k)
+            continue;
 
-            auto stats = forwardPass(data[k], labels[k], k);
+        auto stats = forwardPass(data[k], labels[k], k);
 
-            // Do backprop and then aggregate values into deltaWeights and deltaBiases
-            const auto &lastLayerConf = networkConfig.layersConfig[networkConfig.layersConfig.size() - 1];
-            if (lastLayerConf.activationFunctionType != ActivationFunction::SoftMax) {
-                throw WrongOutputActivationFunction();
-            }
+        // Do backprop and then aggregate values into deltaWeights and deltaBiases
+        const auto &lastLayerConf = networkConfig.layersConfig[networkConfig.layersConfig.size() - 1];
+        if (lastLayerConf.activationFunctionType != ActivationFunction::SoftMax) {
+            throw WrongOutputActivationFunction();
+        }
 
-            size_t numLayers = networkConfig.layersConfig.size();
+        size_t numLayers = networkConfig.layersConfig.size();
 
-            auto lastLayerDelta = CrossentropyFunction::costDelta(parallelActivationResults[k][numLayers - 1],
-                                                                  labels[k]);
-            auto *lastDelta = &lastLayerDelta;
-            auto wDelta = parallelActivationResults[k][numLayers - 2].transpose().matmul(lastLayerDelta);
+        auto lastLayerDelta = CrossentropyFunction::costDelta(parallelActivationResults[k][numLayers - 1],
+                                                              labels[k]);
+        auto *lastDelta = &lastLayerDelta;
+        auto wDelta = parallelActivationResults[k][numLayers - 2].transpose().matmul(lastLayerDelta);
+
+#pragma omp critical
+        {
+            acc += stats.accuracy;
+            ce += stats.crossEntropy;
+            weightDeltas[numLayers - 2] += wDelta;
+        };
+
+        for (int i = static_cast<int>(numLayers) - 2; i > 0; --i) {
+            auto matmuls = lastDelta->matmul(weightsTransposed[i]);
+            matmuls *= parallelActivationDerivResults[k][i - 1];
+            lastLayerDelta = matmuls;
+            lastDelta = &lastLayerDelta;
+            wDelta = parallelActivationResults[k][i - 1].transpose().matmul(matmuls);
 
 #pragma omp critical
             {
-                acc += stats.accuracy;
-                ce += stats.crossEntropy;
-                weightDeltas[numLayers - 2] += wDelta;
+                weightDeltas[i - 1] += wDelta;
             };
-
-            for (int i = static_cast<int>(numLayers) - 2; i > 0; --i) {
-                auto matmuls = lastDelta->matmul(weightsTransposed[i]);
-                matmuls *= parallelActivationDerivResults[k][i - 1];
-                lastLayerDelta = matmuls;
-                lastDelta = &lastLayerDelta;
-                wDelta = parallelActivationResults[k][i - 1].transpose().matmul(matmuls);
-
-#pragma omp critical
-                {
-                    weightDeltas[i - 1] += wDelta;
-                };
-            }
-
-            for (size_t i = 0; i < numLayers - 1; ++i) {
-                std::fill(parallelDeltaBiases[k][i].begin(), parallelDeltaBiases[k][i].end(), 0);
-                for (size_t j = 0; j < parallelDeltaWeights[k][i].getNumRows(); ++j) {
-#pragma omp simd
-                    for (size_t l = 0; l < parallelDeltaWeights[k][i].getNumCols(); ++l) {
-                        parallelDeltaBiases[k][i][l] += parallelDeltaWeights[k][i].getItem(j, l);
-                    }
-                }
-
-#pragma omp critical
-                {
-#pragma omp simd
-                    for (size_t j = 0; j < deltaBiases[i].size(); ++j) {
-                        deltaBiases[i][j] += parallelDeltaBiases[k][i][j] / static_cast<float>(data[k].getNumRows());
-                    }
-                };
-            }
         }
+
+        for (size_t i = 0; i < numLayers - 1; ++i) {
+            std::fill(parallelDeltaBiases[k][i].begin(), parallelDeltaBiases[k][i].end(), 0);
+            for (size_t j = 0; j < parallelDeltaWeights[k][i].getNumRows(); ++j) {
+#pragma omp simd
+                for (size_t l = 0; l < parallelDeltaWeights[k][i].getNumCols(); ++l) {
+                    parallelDeltaBiases[k][i][l] += parallelDeltaWeights[k][i].getItem(j, l);
+                }
+            }
+
+#pragma omp critical
+            {
+#pragma omp simd
+                for (size_t j = 0; j < deltaBiases[i].size(); ++j) {
+                    deltaBiases[i][j] += parallelDeltaBiases[k][i][j] / static_cast<float>(data[k].getNumRows());
+                }
+            };
+        }
+    }
 
     return Stats{.accuracy=acc / numThreads, .crossEntropy=ce / numThreads};
 }
 
-auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches, const std::vector<std::vector<unsigned int>> &labels) {
+auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
+                              const std::vector<std::vector<unsigned int>> &labels) {
     float acc = 0;
     float ce = 0;
 
@@ -189,7 +189,7 @@ auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches, con
     }
 
     return Stats{.accuracy = acc / static_cast<float>(numThreads),
-                 .crossEntropy = ce / static_cast<float>(numThreads)};
+            .crossEntropy = ce / static_cast<float>(numThreads)};
 }
 
 void Network::weightDecay(float lambda) {
@@ -205,7 +205,7 @@ void Network::weightDecay(float lambda) {
 }
 
 void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t batchSize, float eta, float lambda,
-                  uint8_t verboseLevel, LRScheduler *sched, size_t earlyStopping, long int maxTimeMs) {
+                  uint8_t verboseLevel, LRScheduler *sched, size_t earlyStopping, long maxTimeMs) {
     if (eta < 0) {
         throw NegativeEtaException();
     }
@@ -217,15 +217,17 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     auto &validation_X = trainValSplit.validationData;
     auto &validation_y = trainValSplit.validationLabels;
 
-    auto validationBatches_X = Matrix<float>::generateBatches(validation_X, (validation_X.getNumRows() + numThreads - 1) / numThreads);
-    auto validationBatches_y = Matrix<unsigned int>::generateVectorBatches(validation_y, (validation_y.size() + numThreads - 1) / numThreads);
+    auto validationBatches_X = DataManager::generateBatches(validation_X,
+                                                            (validation_X.getNumRows() + numThreads - 1) / numThreads);
+    auto validationBatches_y = DataManager::generateVectorBatches(validation_y,
+                                                                  (validation_y.size() + numThreads - 1) / numThreads);
 
     // Copy train data
     auto shuffledTrain_X = train_X;
     auto shuffledTrain_y = train_y;
 
-    auto trainBatches_X = Matrix<float>::generateBatches(train_X, batchSize);
-    auto trainBatches_y = Matrix<unsigned int>::generateVectorBatches(train_y, batchSize);
+    auto trainBatches_X = DataManager::generateBatches(train_X, batchSize);
+    auto trainBatches_y = DataManager::generateVectorBatches(train_y, batchSize);
 
     float accSum = 0;
     float ceSum = 0;
@@ -246,17 +248,19 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
         shuffledTrain_y = std::move(shuffledData.vectorLabels);
 
         // Create new batches after reshuffling the data
-        trainBatches_X = Matrix<float>::generateBatches(shuffledTrain_X, batchSize);
-        trainBatches_y = Matrix<unsigned int>::generateVectorBatches(shuffledTrain_y, batchSize);
+        trainBatches_X = DataManager::generateBatches(shuffledTrain_X, batchSize);
+        trainBatches_y = DataManager::generateVectorBatches(shuffledTrain_y, batchSize);
 
         std::vector<std::vector<Matrix<float>>> parallelBatches_X;
         std::vector<std::vector<std::vector<unsigned int>>> parallelBatches_y;
 
-        for (auto &batch : trainBatches_X) {
-            parallelBatches_X.emplace_back(Matrix<float>::generateBatches(batch, (batch.getNumRows() + numThreads -1) / numThreads));
+        for (auto &batch: trainBatches_X) {
+            parallelBatches_X.emplace_back(
+                    DataManager::generateBatches(batch, (batch.getNumRows() + numThreads - 1) / numThreads));
         }
-        for (auto &batch : trainBatches_y) {
-            parallelBatches_y.emplace_back(Matrix<unsigned int>::generateVectorBatches(batch, (batch.size() + numThreads - 1) / numThreads));
+        for (auto &batch: trainBatches_y) {
+            parallelBatches_y.emplace_back(
+                    DataManager::generateVectorBatches(batch, (batch.size() + numThreads - 1) / numThreads));
         }
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -277,7 +281,7 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
         auto valStats = predictParallel(validationBatches_X, validationBatches_y);
 
         if (verboseLevel >= 3) {
-            for (const auto &singleWeights : weights) {
+            for (const auto &singleWeights: weights) {
                 WeightInfo::printWeightStats(singleWeights, true);
             }
         }
@@ -303,20 +307,20 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
             std::cout << "ETA: " << eta << std::endl;
         }
 
-        if (earlyStopping != 0){
-            if (valStats.crossEntropy < currentBestCE){
+        if (earlyStopping != 0) {
+            if (valStats.crossEntropy < currentBestCE) {
                 currentBestCE = valStats.crossEntropy;
                 epochOfBestCE = i;
             }
-            if (i - epochOfBestCE == earlyStopping){
+            if (i - epochOfBestCE == earlyStopping) {
                 break;
             }
         }
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto currentDuration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-        if (maxTimeMs != 0 && currentDuration >= maxTimeMs){
-            if (verboseLevel >= 1){
+        if (maxTimeMs != 0 && currentDuration >= maxTimeMs) {
+            if (verboseLevel >= 1) {
                 std::cout << "Time exceeded" << std::endl;
             }
             break;

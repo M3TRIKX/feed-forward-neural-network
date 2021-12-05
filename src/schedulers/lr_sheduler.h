@@ -16,7 +16,7 @@ class LRScheduler {
     float minEta;
     float decayRate;
     unsigned int stepsDecay;
-    unsigned int  numSteps = 0;
+    unsigned int numSteps = 0;
 public:
     /**
      *
@@ -26,7 +26,7 @@ public:
      * @param stepsDecay LR decay occurs after we pass at least stepsDecay examples through the network
      */
     LRScheduler(float eta, float minEta, float decayRate, unsigned int stepsDecay)
-        : currentEta(eta), minEta(minEta), decayRate(decayRate), stepsDecay(stepsDecay) {}
+            : currentEta(eta), minEta(minEta), decayRate(decayRate), stepsDecay(stepsDecay) {}
 
     LRScheduler(float minEta, float decayRate, unsigned int stepsDecay)
             : currentEta(1e-3), minEta(minEta), decayRate(decayRate), stepsDecay(stepsDecay) {}

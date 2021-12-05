@@ -7,21 +7,14 @@
 
 #include "template.h"
 #include <algorithm>
-#include <math.h>
 
-/**
- * ReLU activation function
- */
-class ReLU: public ActivationFunctionTemplate {
+class ReLU : public ActivationFunctionTemplate {
 public:
     static void normal(Matrix<type> &matrix) {
         auto fn = [](type x) {
-            // ToDo: Change to float in the end.
-            return std::max(0.f, x);
+            return std::max(type{}, x);
         };
         matrix.applyFunction(fn);
-//        return std::max(0.f, x);
-
     }
 
     static void derivative(Matrix<type> &matrix) {

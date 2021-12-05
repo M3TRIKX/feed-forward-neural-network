@@ -5,6 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_TEMPLATE_H
 #define FEEDFORWARDNEURALNET_TEMPLATE_H
 
+#include <math.h>
 #include "../data_structures/matrix.h"
 
 /**
@@ -19,14 +20,14 @@ public:
      * @param x - point at which we want to compute the function.
      * @return computed value
      */
-    static void normal(Matrix<type> &matrix);
+    static void normal(Matrix<type> &) {};
 
     /**
      * Computes function derivative at the point x.
      * @param x - point at which we want to compute the derivative.
      * @return computed derivative at the point x.
      */
-    static type derivative(type x);
+    static void derivative(Matrix<type> &) {};
 };
 
 #endif //FEEDFORWARDNEURALNET_TEMPLATE_H

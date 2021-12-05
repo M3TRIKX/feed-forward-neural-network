@@ -12,13 +12,14 @@
 #include <random>
 #include <vector>
 
-class TrainingSetNotLargeEnoughException : public std::exception{};
-class WrongSplitBatchesException : public std::exception{};
-class WrongInputMatricesException : public std::exception{};
+class TrainingSetNotLargeEnoughException : public std::exception {
+};
+
+class WrongInputMatricesException : public std::exception {
+};
 
 struct DataLabelsShuffle_t {
     Matrix<float> data;
-    Matrix<unsigned int> labels;
     std::vector<unsigned int> vectorLabels;
 };
 
@@ -39,25 +40,43 @@ public:
 
     /**
      * Splits data into training and validation set.
-     * numOfTrainSamples must be greater or equal to the number of data samples.
+     * The class distribution is retained.
      *
-     * @param dataMatrix        Data we want to split
-     * @param labelsMatrix      Labels we want to split
-     * @param numOfTrainSamples Number of samples we want to have in the training set
-     *                          (the validation one will contain the rest).
+     * @param data         Data we want to split
+     * @param labelsMatrix Labels we want to split
+     * @param trainRatio   Percentage of train data
      * @return Split dataset
      */
-    static TrainValSplit_t trainValidateSplit(const Matrix<elem_type> &dataMatrix, const std::vector<unsigned int> &labelsVector, size_t numOfTrainSamples);
+    static TrainValSplit_t
+    trainValidateSplit(Matrix<elem_type> &&data, std::vector<unsigned int> &&labels, float trainRatio = 8.f / 10);
 
     /**
      * Shuffles the data and the labels randomly (both the same way).
      *
-     * @param dataMatrix   Data we want to shuffle
-     * @param labelsMatrix Labels we want to shuffle (corresponds to the data)
+     * @param data   Data we want to shuffle
+     * @param labels Labels we want to shuffle (corresponds to the data)
      * @return Shuffled matrices.
      */
-    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, Matrix<unsigned int> &&labelsMatrix);
-    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&dataMatrix, std::vector<unsigned int> &&labelsMatrix);
+    static DataLabelsShuffle_t randomShuffle(Matrix<elem_type> &&data, std::vector<unsigned int> &&labels);
+
+    /**
+    * Divides a matrix into batch-sized matrices
+     *
+    * @param mat - source matrix
+    * @param batchSize - batch size
+    * @return batch-sized matrices
+    */
+    static std::vector<Matrix<elem_type>> generateBatches(const Matrix<elem_type> &mat, size_t batchSize);
+
+    /**
+     * Generates batch-sized vectors from source vector
+     *
+     * @param vec - source vector
+     * @param batchSize - batch size
+     * @return batch-sized vectors
+     */
+    static std::vector<std::vector<unsigned int>>
+    generateVectorBatches(const std::vector<unsigned int> &vec, size_t batchSize);
 };
 
 

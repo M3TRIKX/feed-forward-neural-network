@@ -12,7 +12,7 @@
  * Class containing cross-entropy function and its derivative
  */
 class CrossentropyFunction {
-    constexpr static float zeroCorrection = 1e-15;
+    constexpr static float zeroCorrection = 1e-7;
 public:
     /**
      * Calculates cross-entropy of predictions
@@ -20,14 +20,15 @@ public:
      * @param expected - expected labels
      * @return cross-entropy
      */
-    auto static crossentropy(const Matrix<float> &predicted, const std::vector<unsigned int> &expected){
+    auto static crossentropy(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
         float crossEntropyRes = 0;
 
-        for (size_t i = 0; i < predicted.getNumRows(); i++){
-            for (size_t j = 0; j < predicted.getNumCols(); j++){
+        for (size_t i = 0; i < predicted.getNumRows(); i++) {
+            for (size_t j = 0; j < predicted.getNumCols(); j++) {
                 float expectedValue = expected[i] == j ? 1.f : 0.f;
                 float calculatedValue = predicted.getItem(i, j);
-                crossEntropyRes -= expectedValue * log(calculatedValue + zeroCorrection) + (1 - expectedValue) * log(1 - calculatedValue + zeroCorrection);
+                crossEntropyRes -= expectedValue * logf(calculatedValue + zeroCorrection) +
+                                   (1 - expectedValue) * logf(1 - calculatedValue + zeroCorrection);
             }
         }
         return crossEntropyRes / static_cast<float>(expected.size());
@@ -52,4 +53,5 @@ public:
         return delta;
     }
 };
+
 #endif //FEEDFORWARDNEURALNET_CROSSENTROPY_H

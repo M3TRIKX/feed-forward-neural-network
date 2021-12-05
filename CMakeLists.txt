@@ -3,7 +3,7 @@ project(FeedForwardNeuralNet)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS "-pipe -O3 -fno-math-errno -fexcess-precision=fast -fno-rounding-math -fno-signaling-nans -funroll-loops -mavx2 -mfma -march=native -openmp:experimental")
+set(CMAKE_CXX_FLAGS "-pipe -Ofast -fno-math-errno -fexcess-precision=fast -fno-rounding-math -fno-signaling-nans -funroll-loops -mavx2 -mfma -march=native -openmp:experimental")
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
