@@ -76,13 +76,13 @@ DataLabelsShuffle_t DataManager::randomShuffle(Matrix<elem_type> &&data, std::ve
     std::vector<std::vector<elem_type>> newData(indexes.size(), std::vector<elem_type>(data.getNumCols(), 0));
     std::vector<unsigned int> newLabels(indexes.size());
 
-    size_t newIndex = 0;
-    for (auto index: indexes) {
+#pragma omp parallel for default(none) shared(indexes, newData, newLabels, labels, data)
+    for (size_t i = 0; i < indexes.size(); ++i) {
+        size_t index = indexes[i];
         for (size_t k = 0; k < data.getNumCols(); ++k) {
-            newData[newIndex][k] = data.matrix[index * data.getNumCols() + k];
+            newData[i][k] = data.matrix[index * data.getNumCols() + k];
         }
-        newLabels[newIndex] = labels[index];
-        ++newIndex;
+        newLabels[i] = labels[index];
     }
 
     return {

@@ -251,16 +251,22 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
         trainBatches_X = DataManager::generateBatches(shuffledTrain_X, batchSize);
         trainBatches_y = DataManager::generateVectorBatches(shuffledTrain_y, batchSize);
 
-        std::vector<std::vector<Matrix<float>>> parallelBatches_X;
-        std::vector<std::vector<std::vector<unsigned int>>> parallelBatches_y;
+        std::vector<std::vector<Matrix<float>>> parallelBatches_X(trainBatches_X.size());
+        std::vector<std::vector<std::vector<unsigned int>>> parallelBatches_y(trainBatches_X.size());
 
-        for (auto &batch: trainBatches_X) {
-            parallelBatches_X.emplace_back(
-                    DataManager::generateBatches(batch, (batch.getNumRows() + numThreads - 1) / numThreads));
-        }
-        for (auto &batch: trainBatches_y) {
-            parallelBatches_y.emplace_back(
-                    DataManager::generateVectorBatches(batch, (batch.size() + numThreads - 1) / numThreads));
+#pragma omp parallel default(none) shared(parallelBatches_X, parallelBatches_y, batchSize, trainBatches_X, trainBatches_y)
+        {
+#pragma omp for nowait
+            for (size_t j = 0; j < trainBatches_X.size(); ++j) {
+                parallelBatches_X[j] = (
+                        DataManager::generateBatches(trainBatches_X[j], (trainBatches_X[j].getNumRows() + numThreads - 1) / numThreads));
+            }
+
+#pragma omp for
+            for (size_t k = 0; k < trainBatches_y.size(); ++k) {
+                parallelBatches_y[k] = (
+                        DataManager::generateVectorBatches(trainBatches_y[k], (trainBatches_y[k].size() + numThreads - 1) / numThreads));
+            }
         }
 
         auto start = std::chrono::high_resolution_clock::now();
