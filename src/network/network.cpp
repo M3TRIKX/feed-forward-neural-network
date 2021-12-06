@@ -97,7 +97,7 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
     }
 
 #pragma omp parallel for default(none) shared(acc, ce, data, labels, startRows, parallelActivationResults, parallelActivationDerivResults, deltaBiases, networkConfig, weightsTransposed)
-    for (size_t k = 0; k < numThreads; ++k) {
+    for (size_t k = 0; k < NUM_NET_THREADS; ++k) {
         if (data.size() - 1 < k)
             continue;
 
@@ -155,7 +155,7 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         }
     }
 
-    return Stats{.accuracy=acc / numThreads, .crossEntropy=ce / numThreads};
+    return Stats{.accuracy=acc / NUM_NET_THREADS, .crossEntropy=ce / NUM_NET_THREADS};
 }
 
 auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
@@ -164,7 +164,7 @@ auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
     float ce = 0;
 
 #pragma omp parallel for default(none) shared(dataBatches, labels, acc, ce)
-    for (size_t k = 0; k < numThreads; ++k) {
+    for (size_t k = 0; k < NUM_NET_THREADS; ++k) {
         auto &data = dataBatches[k];
         auto tmp = data.matmul(weights[0]);
         tmp += biases[0];
@@ -188,8 +188,8 @@ auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
         };
     }
 
-    return Stats{.accuracy = acc / static_cast<float>(numThreads),
-            .crossEntropy = ce / static_cast<float>(numThreads)};
+    return Stats{.accuracy = acc / static_cast<float>(NUM_NET_THREADS),
+            .crossEntropy = ce / static_cast<float>(NUM_NET_THREADS)};
 }
 
 void Network::weightDecay(float lambda) {
@@ -218,9 +218,9 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
     auto &validation_y = trainValSplit.validationLabels;
 
     auto validationBatches_X = DataManager::generateBatches(validation_X,
-                                                            (validation_X.getNumRows() + numThreads - 1) / numThreads);
+                                                            (validation_X.getNumRows() + NUM_NET_THREADS - 1) / NUM_NET_THREADS);
     auto validationBatches_y = DataManager::generateVectorBatches(validation_y,
-                                                                  (validation_y.size() + numThreads - 1) / numThreads);
+                                                                  (validation_y.size() + NUM_NET_THREADS - 1) / NUM_NET_THREADS);
 
     // Copy train data
     auto shuffledTrain_X = train_X;
@@ -259,13 +259,13 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
 #pragma omp for nowait
             for (size_t j = 0; j < trainBatches_X.size(); ++j) {
                 parallelBatches_X[j] = (
-                        DataManager::generateBatches(trainBatches_X[j], (trainBatches_X[j].getNumRows() + numThreads - 1) / numThreads));
+                        DataManager::generateBatches(trainBatches_X[j], (trainBatches_X[j].getNumRows() + NUM_NET_THREADS - 1) / NUM_NET_THREADS));
             }
 
 #pragma omp for
             for (size_t k = 0; k < trainBatches_y.size(); ++k) {
                 parallelBatches_y[k] = (
-                        DataManager::generateVectorBatches(trainBatches_y[k], (trainBatches_y[k].size() + numThreads - 1) / numThreads));
+                        DataManager::generateVectorBatches(trainBatches_y[k], (trainBatches_y[k].size() + NUM_NET_THREADS - 1) / NUM_NET_THREADS));
             }
         }
 

@@ -5,6 +5,7 @@
 #include "data_manager.h"
 #include <unordered_map>
 
+#include <cassert>
 TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::vector<unsigned int> &&labels,
                                                 float trainRatio) {
     if (data.getNumRows() != labels.size()) {
@@ -14,9 +15,6 @@ TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::v
     auto shuffled = randomShuffle(std::move(data), std::move(labels));
     auto numCols = shuffled.data.getNumCols();
 
-    size_t numOfTrainSamples = trainRatio * shuffled.data.getNumRows();
-    size_t numOfValSamples = shuffled.vectorLabels.size() - numOfTrainSamples;
-
     // Create a map that represents a number of samples in each class and draw
     // n per cent of samples from each class randomly.
     // By doing so, we retain the class distribution.
@@ -25,7 +23,15 @@ TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::v
         classDistribution[shuffled.vectorLabels[i]].push_back(i);
     }
 
-    TrainValSplit_t result{
+    size_t numOfTrainSamples = 0;
+    size_t numOfValSamples = 0;
+
+    for (auto &dataClass : classDistribution) {
+        numOfTrainSamples += dataClass.second.size() * trainRatio;
+    }
+    numOfValSamples = shuffled.data.getNumRows() - numOfTrainSamples;
+
+    TrainValSplit_t result {
             .trainData=Matrix<float>(numOfTrainSamples, numCols),
             .trainLabels=std::vector<unsigned int>(numOfTrainSamples),
             .validationData=Matrix<float>(numOfValSamples, numCols),
@@ -34,7 +40,7 @@ TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::v
 
     size_t trainStartIndex = 0;
     size_t valStartIndex = 0;
-    for (auto &dataClass: classDistribution) {
+    for (auto &dataClass : classDistribution) {
         size_t numOfTrainClassSamples = dataClass.second.size() * trainRatio;
         size_t numOfValClassSamples = dataClass.second.size() - numOfTrainClassSamples;
 

@@ -9,6 +9,10 @@
 #include "../optimizers/optimizer_template.h"
 #include "../schedulers/lr_sheduler.h"
 
+#ifndef NUM_NET_THREADS
+#define NUM_NET_THREADS 5
+#endif
+
 class WrongInputDataDimension : public std::exception {
 };
 
@@ -36,11 +40,9 @@ class Network {
     std::vector<std::vector<Matrix<ELEMENT_TYPE>>> parallelDeltaWeights;
     std::vector<std::vector<std::vector<ELEMENT_TYPE>>> parallelDeltaBiases;
 
-    const int numThreads = 4;
-
 public:
     Network(const Config &config, Optimizer *optimizer) : networkConfig(config), optimizer(optimizer) {
-        for (size_t i = 0; i < numThreads; ++i) {
+        for (size_t i = 0; i < NUM_NET_THREADS; ++i) {
             parallelActivationResults.emplace_back(config.layersConfig.size());
             parallelActivationDerivResults.emplace_back(config.layersConfig.size());
             parallelDeltaWeights.emplace_back();
@@ -76,7 +78,7 @@ public:
             biases.emplace_back(nextLayer.numNeurons, 0);
             deltaBiases.emplace_back(nextLayer.numNeurons, 0);
 
-            for (size_t k = 0; k < numThreads; ++k) {
+            for (size_t k = 0; k < NUM_NET_THREADS; ++k) {
                 parallelDeltaWeights[k].emplace_back();
                 parallelDeltaBiases[k].emplace_back(nextLayer.numNeurons, 0);
             }
