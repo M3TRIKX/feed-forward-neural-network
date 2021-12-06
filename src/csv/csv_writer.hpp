@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_CSV_WRITER_H
 #define FEEDFORWARDNEURALNET_CSV_WRITER_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,7 +19,7 @@ class CsvWriter {
 public:
     static void writeCsv(const char *path, const Matrix<T> &matrix) {
         // Create CSV content in-memory
-        std::string csvContent;
+        std::string csvContent{};
 
         for (unsigned i = 0; i < matrix.getNumRows(); ++i) {
             csvContent += std::to_string(matrix.getItem(i, 0));
@@ -37,7 +37,7 @@ public:
 
     static void writeCsv(const char *path, const std::vector<T> &data) {
         // Create CSV content in-memory
-        std::string csvContent;
+        std::string csvContent{};
 
         for (unsigned i = 0; i < data.size(); ++i) {
             csvContent += std::to_string(data[i]);

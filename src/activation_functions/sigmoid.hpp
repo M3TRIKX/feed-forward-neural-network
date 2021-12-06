@@ -1,7 +1,7 @@
 #ifndef FEEDFORWARDNEURALNET_SIGMOID_H
 #define FEEDFORWARDNEURALNET_SIGMOID_H
 
-#include "template.h"
+#include "template.hpp"
 
 class Sigmoid : public ActivationFunctionTemplate {
 public:

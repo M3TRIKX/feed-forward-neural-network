@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_CROSSENTROPY_H
 #define FEEDFORWARDNEURALNET_CROSSENTROPY_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 #include <math.h>
 
 /**

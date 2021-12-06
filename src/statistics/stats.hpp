@@ -2,13 +2,13 @@
 // Created by Dáša Pawlasová on 20.10.2021.
 //
 
-#ifndef FEEDFORWARDNEURALNET_STATS_PRINTER_H
-#define FEEDFORWARDNEURALNET_STATS_PRINTER_H
+#ifndef FEEDFORWARDNEURALNET_STATS_H
+#define FEEDFORWARDNEURALNET_STATS_H
 
-#include "./accuracy.h"
-#include "./crossentropy.h"
+#include "./accuracy.hpp"
+#include "./crossentropy.hpp"
 
-struct Stats {
+struct Stats_t {
     float accuracy = 0;
     float crossEntropy = 0;
 };
@@ -16,7 +16,7 @@ struct Stats {
 /**
  * Class containing different ways of printing and retrieving stats
  */
-class StatsPrinter {
+class Stats {
     static const int DECIMAL_PLACES_IN_PRINT = 4;
 
 public:
@@ -27,7 +27,7 @@ public:
      * @param expected - expected labels
      * @return stats as a map
      */
-    static Stats getStats(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
+    static Stats_t getStats(const Matrix<float> &predicted, const std::vector<unsigned int> &expected) {
         float accuracy = AccuracyFunction::accuracy(argmax(predicted), expected);
         float crossentropy = CrossentropyFunction::crossentropy(predicted, expected);
         return {.accuracy=accuracy, .crossEntropy=crossentropy};
@@ -85,7 +85,6 @@ public:
         std::cout << "%    ValLoss: " << std::fixed << std::setprecision(DECIMAL_PLACES_IN_PRINT) << valCE << std::endl;
     }
 
-private:
     /**
      * Function calculating argmax or each row in the matrix
      * @param matrix - matrix to compute argmax on
@@ -106,4 +105,4 @@ private:
     }
 };
 
-#endif //FEEDFORWARDNEURALNET_STATS_PRINTER_H
+#endif //FEEDFORWARDNEURALNET_STATS_H

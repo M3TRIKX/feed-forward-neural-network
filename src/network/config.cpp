@@ -1,4 +1,4 @@
-#include "config.h"
+#include "config.hpp"
 
 Config &Config::addLayer(size_t numNeurons, ActivationFunction activationFunction) {
     ActivationFunction_t fn{};

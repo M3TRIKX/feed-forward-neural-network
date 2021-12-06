@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_CSV_READER_H
 #define FEEDFORWARDNEURALNET_CSV_READER_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 #include <algorithm>
 #include <cstring>
 #include <sstream>
@@ -66,14 +66,6 @@ public:
 
     auto &&getDataMatrixRvalRef() {
         return std::move(dataMatrix);
-    }
-
-    /**
-     *
-     * @return num of CSV rows
-     */
-    auto getNumOfRows() const {
-        return dataMatrix.getNumRows();
     }
 };
 

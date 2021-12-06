@@ -2,7 +2,7 @@
 // Created by Dáša Pawlasová on 21.11.2021.
 //
 
-#include "util_functions.h"
+#include "util_functions.hpp"
 
 std::tuple<float, float, float> getStats(std::vector<float> vec) {
     auto min = vec[0];
@@ -38,7 +38,7 @@ void printProgressLine(size_t current, size_t max, std::string text) {
 }
 
 void printTestResultsForConfig(size_t firstHidden, size_t secondHidden, size_t batchSize, float eta, float lambda,
-                               float decayRate, size_t stepsDecay, float minEta, size_t earlyStopping, Stats stats,
+                               float decayRate, size_t stepsDecay, float minEta, size_t earlyStopping, Stats_t stats,
                                float runTime) {
     std::cout << "Accuracy: " << stats.accuracy << "% Cross-entropy: " << stats.crossEntropy << " Run-time: "
               << convertToMinSecText(runTime);

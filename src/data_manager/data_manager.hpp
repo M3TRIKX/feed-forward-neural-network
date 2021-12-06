@@ -5,18 +5,15 @@
 #ifndef FEEDFORWARDNEURALNET_DATA_MANAGER_H
 #define FEEDFORWARDNEURALNET_DATA_MANAGER_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <random>
 #include <vector>
 
-class TrainingSetNotLargeEnoughException : public std::exception {
-};
-
-class WrongInputMatricesException : public std::exception {
-};
+class TrainingSetNotLargeEnoughException : public std::exception {};
+class WrongInputMatricesException : public std::exception {};
 
 struct DataLabelsShuffle_t {
     Matrix<float> data;

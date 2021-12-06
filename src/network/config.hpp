@@ -1,11 +1,11 @@
 #ifndef FEEDFORWARDNEURALNET_CONFIG_H
 #define FEEDFORWARDNEURALNET_CONFIG_H
 
-#include "../activation_functions/functions_enum.h"
-#include "../activation_functions/fast_sigmoid.h"
-#include "../activation_functions/relu.h"
-#include "../activation_functions/sigmoid.h"
-#include "../activation_functions/softmax.h"
+#include "../activation_functions/functions_enum.hpp"
+#include "../activation_functions/fast_sigmoid.hpp"
+#include "../activation_functions/relu.hpp"
+#include "../activation_functions/sigmoid.hpp"
+#include "../activation_functions/softmax.hpp"
 #include <cstdlib>
 #include <memory>
 #include <utility>

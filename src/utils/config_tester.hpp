@@ -5,13 +5,13 @@
 #ifndef FEEDFORWARDNEURALNET_CONFIG_TESTER_H
 #define FEEDFORWARDNEURALNET_CONFIG_TESTER_H
 
-#include "../network/config.h"
-#include "../network/network.h"
-#include "../activation_functions/functions_enum.h"
-#include "../csv/csv_reader.h"
-#include "../data_manager/data_manager.h"
-#include "../optimizers/adam.h"
-#include "../utils/util_functions.h"
+#include "../network/config.hpp"
+#include "../network/network.hpp"
+#include "../activation_functions/functions_enum.hpp"
+#include "../csv/csv_reader.hpp"
+#include "../data_manager/data_manager.hpp"
+#include "../optimizers/adam.hpp"
+#include "../utils/util_functions.hpp"
 #include <iostream>
 #include <chrono>
 #include <omp.h>

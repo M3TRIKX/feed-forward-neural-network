@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_UTIL_FUNCTIONS_H
 #define FEEDFORWARDNEURALNET_UTIL_FUNCTIONS_H
 
-#include "../statistics/stats_printer.h"
+#include "../statistics/stats.hpp"
 #include <iostream>
 
 /**
@@ -45,7 +45,7 @@ void printProgressLine(size_t current, size_t max, std::string text);
  * @param runTime - time the configuration has run
  */
 void printTestResultsForConfig(size_t firstHidden, size_t secondHidden, size_t batchSize, float eta, float lambda,
-                               float decayRate, size_t stepsDecay, float minEta, size_t earlyStopping, Stats stats,
+                               float decayRate, size_t stepsDecay, float minEta, size_t earlyStopping, Stats_t stats,
                                float runTime);
 
 

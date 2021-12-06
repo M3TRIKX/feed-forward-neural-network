@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_WEIGHTS_INFO_H
 #define FEEDFORWARDNEURALNET_WEIGHTS_INFO_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 #include <math.h>
 #include <algorithm>
 

@@ -2,7 +2,7 @@
 // Created by Dáša Pawlasová on 21.11.2021.
 //
 
-#include "config_tester.h"
+#include "config_tester.hpp"
 
 void ConfigTester::printConfigInfo(Configuration config, size_t runs) {
     std::cout << "---------------------------------------------------" << std::endl;
@@ -84,7 +84,7 @@ void ConfigTester::testConfigs(std::vector<Configuration> &configurations, size_
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() / 60000.0;
 
             auto predicted = network.predict(testVectors.getDataMatrix());
-            auto testStats = StatsPrinter::getStats(predicted, testLabels.getDataMatrix().getMatrixCol(0));
+            auto testStats = Stats::getStats(predicted, testLabels.getDataMatrix().getMatrixCol(0));
 
             times.push_back(runTimeMin);
             losses.push_back(testStats.crossEntropy);
@@ -130,8 +130,8 @@ ConfigTester::runParallelConfigTest(std::vector<Configuration> &configurations, 
             auto runTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() / 60000.0;
 
             auto predicted = network.predict(testVectors.getDataMatrix());
-            auto testStats = StatsPrinter::getStats(predicted,
-                                                    testLabels.getDataMatrix().getMatrixCol(
+            auto testStats = Stats::getStats(predicted,
+                                             testLabels.getDataMatrix().getMatrixCol(
                                                             0));
             printTestResultsForConfig(firstHidden, secondHidden, batchSize, eta, lambda, decayRate,
                                       stepsDecay, minEta, earlyStopping, testStats, runTime);

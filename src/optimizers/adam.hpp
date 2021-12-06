@@ -5,9 +5,9 @@
 #ifndef FEEDFORWARDNEURALNET_ADAM_H
 #define FEEDFORWARDNEURALNET_ADAM_H
 
-#include "../data_structures/matrix.h"
-#include "../network/config.h"
-#include "optimizer_template.h"
+#include "../data_structures/matrix.hpp"
+#include "../network/config.hpp"
+#include "optimizer_template.hpp"
 #include <cmath>
 #include <math.h>
 

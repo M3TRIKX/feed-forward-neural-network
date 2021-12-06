@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_RELU_H
 #define FEEDFORWARDNEURALNET_RELU_H
 
-#include "template.h"
+#include "template.hpp"
 #include <algorithm>
 
 class ReLU : public ActivationFunctionTemplate {

@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_SGD_H
 #define FEEDFORWARDNEURALNET_SGD_H
 
-#include "optimizer_template.h"
+#include "optimizer_template.hpp"
 
 class SGDOptimizer : public Optimizer {
 

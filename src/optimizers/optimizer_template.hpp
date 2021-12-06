@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_OPTIMIZER_TEMPLATE_H
 #define FEEDFORWARDNEURALNET_OPTIMIZER_TEMPLATE_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 
 /**
  * Class representing optimizer

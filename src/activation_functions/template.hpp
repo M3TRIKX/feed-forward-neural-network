@@ -6,7 +6,7 @@
 #define FEEDFORWARDNEURALNET_TEMPLATE_H
 
 #include <math.h>
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 
 /**
  * This class is a template for activation function

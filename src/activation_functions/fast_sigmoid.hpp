@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_FAST_SIGMOID_H
 #define FEEDFORWARDNEURALNET_FAST_SIGMOID_H
 
-#include "template.h"
+#include "template.hpp"
 
 /**
  * FastSigmoid is an approximation to the sigmoid function.

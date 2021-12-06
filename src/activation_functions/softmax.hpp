@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_SOFTMAX_H
 #define FEEDFORWARDNEURALNET_SOFTMAX_H
 
-#include "template.h"
+#include "template.hpp"
 
 class SoftMax : public ActivationFunctionTemplate {
 public:

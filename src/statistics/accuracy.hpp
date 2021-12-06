@@ -5,7 +5,7 @@
 #ifndef FEEDFORWARDNEURALNET_ACCURACY_H
 #define FEEDFORWARDNEURALNET_ACCURACY_H
 
-#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.hpp"
 
 /**
  * Class containing accuracy function

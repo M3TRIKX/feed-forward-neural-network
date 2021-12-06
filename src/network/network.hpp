@@ -2,12 +2,12 @@
 #define FEEDFORWARDNEURALNET_NETWORK_H
 
 #include <vector>
-#include "../data_structures/matrix.h"
-#include "config.h"
-#include "../statistics/stats_printer.h"
-#include "../data_manager/data_manager.h"
-#include "../optimizers/optimizer_template.h"
-#include "../schedulers/lr_sheduler.h"
+#include "../data_structures/matrix.hpp"
+#include "config.hpp"
+#include "../statistics/stats.hpp"
+#include "../data_manager/data_manager.hpp"
+#include "../optimizers/optimizer_template.hpp"
+#include "../schedulers/lr_sheduler.hpp"
 
 #ifndef NUM_NET_THREADS
 #define NUM_NET_THREADS 5
@@ -110,8 +110,21 @@ public:
     auto predictParallel(const std::vector<Matrix<float>> &data, const std::vector<std::vector<unsigned int>> &labels);
 
 private:
+    /**
+     * Do single thread forward pass
+     * @param data      Train data vectors
+     * @param labels    Train labels
+     * @param kthThread Thread number
+     * @return Single thread batch stats
+     */
     auto forwardPass(const Matrix<float> &data, const std::vector<unsigned int> &labels, size_t kthThread);
 
+    /**
+     * Do parallel forward & backward pass and compute weight deltas
+     * @param data   Train data vectors
+     * @param labels Train labels
+     * @return Batch train stats
+     */
     auto forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
                              const std::vector<std::vector<unsigned int>> &labels);
 
@@ -120,6 +133,10 @@ private:
      */
     void updateWeights(size_t batchSize, float eta);
 
+    /**
+     * Calculate weight decay
+     * @param lambda Decay rate
+     */
     void weightDecay(float lambda);
 };
 

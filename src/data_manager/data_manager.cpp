@@ -2,10 +2,9 @@
 // Created by Dominik Klement on 01/11/2021.
 //
 
-#include "data_manager.h"
+#include "data_manager.hpp"
 #include <unordered_map>
 
-#include <cassert>
 TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::vector<unsigned int> &&labels,
                                                 float trainRatio) {
     if (data.getNumRows() != labels.size()) {
@@ -16,7 +15,7 @@ TrainValSplit_t DataManager::trainValidateSplit(Matrix<elem_type> &&data, std::v
     auto numCols = shuffled.data.getNumCols();
 
     // Create a map that represents a number of samples in each class and draw
-    // n per cent of samples from each class randomly.
+    // n percent of samples from each class randomly.
     // By doing so, we retain the class distribution.
     std::unordered_map<unsigned int, std::vector<size_t>> classDistribution;
     for (size_t i = 0; i < shuffled.vectorLabels.size(); ++i) {

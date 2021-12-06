@@ -1,7 +1,7 @@
 #include <chrono>
 #include <cassert>
-#include "network.h"
-#include "../statistics/weights_info.h"
+#include "network.hpp"
+#include "../statistics/weights_info.hpp"
 
 void Network::updateWeights(size_t batchSize, float eta) {
     optimizer->update(weightDeltas, deltaBiases, batchSize, eta);
@@ -63,7 +63,7 @@ auto Network::forwardPass(const Matrix<ELEMENT_TYPE> &data, const std::vector<un
         }
     }
 
-    return StatsPrinter::getStats(tmp, labels);
+    return Stats::getStats(tmp, labels);
 }
 
 auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
@@ -155,7 +155,7 @@ auto Network::forwardBackwardPass(const std::vector<Matrix<ELEMENT_TYPE>> &data,
         }
     }
 
-    return Stats{.accuracy=acc / NUM_NET_THREADS, .crossEntropy=ce / NUM_NET_THREADS};
+    return Stats_t{.accuracy=acc / NUM_NET_THREADS, .crossEntropy=ce / NUM_NET_THREADS};
 }
 
 auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
@@ -179,7 +179,7 @@ auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
             networkConfig.layersConfig[i + 1].activationFunction(tmp);
         }
 
-        auto stats = StatsPrinter::getStats(tmp, labels[k]);
+        auto stats = Stats::getStats(tmp, labels[k]);
 
 #pragma omp critical
         {
@@ -188,7 +188,7 @@ auto Network::predictParallel(const std::vector<Matrix<float>> &dataBatches,
         };
     }
 
-    return Stats{.accuracy = acc / static_cast<float>(NUM_NET_THREADS),
+    return Stats_t{.accuracy = acc / static_cast<float>(NUM_NET_THREADS),
             .crossEntropy = ce / static_cast<float>(NUM_NET_THREADS)};
 }
 
@@ -293,12 +293,12 @@ void Network::fit(const TrainValSplit_t &trainValSplit, size_t numEpochs, size_t
         }
 
         if (verboseLevel >= 1) {
-            StatsPrinter::printProgressLine(accSum / static_cast<float>(numBatches),
+            Stats::printProgressLine(accSum / static_cast<float>(numBatches),
                                             ceSum / static_cast<float>(numBatches),
-                                            valStats.accuracy,
-                                            valStats.crossEntropy,
+                                     valStats.accuracy,
+                                     valStats.crossEntropy,
                                             i + 1,
-                                            numEpochs);
+                                     numEpochs);
 
             accSum = 0;
             ceSum = 0;
