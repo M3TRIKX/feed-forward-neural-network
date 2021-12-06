@@ -12,6 +12,7 @@
 #include <vector>
 #include <omp.h>
 #include <cstring>
+#include <algorithm>
 
 class MatrixSizeException : std::exception {};
 
